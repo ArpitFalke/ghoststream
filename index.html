@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>GhostStream — P2P Video Broadcasting</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--card:#131320;--accent:#7c3aed;--accent2:#06b6d4;--text:#e4e4ef;--dim:#8888a0;--green:#22c55e;--red:#ef4444}
+body{background:var(--bg);color:var(--text);font-family:'SF Mono',Monaco,Inconsolata,'Fira Code',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px;overflow-x:hidden}
+.logo{text-align:center;margin:24px 0 8px}
+.logo h1{font-size:1.8rem;font-weight:700;letter-spacing:-0.5px}
+.logo h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo p{color:var(--dim);font-size:0.75rem;margin-top:4px}
+.container{width:100%;max-width:520px;margin-top:20px}
+.mode-select{display:flex;gap:12px;margin-bottom:20px}
+.mode-btn{flex:1;padding:20px 12px;background:var(--card);border:1px solid #2a2a3a;border-radius:14px;cursor:pointer;text-align:center;transition:all .2s;color:var(--text);font-family:inherit;font-size:0.85rem}
+.mode-btn:active{transform:scale(0.97)}
+.mode-btn.active{border-color:var(--accent);background:rgba(124,58,237,0.1)}
+.mode-btn .icon{font-size:1.8rem;margin-bottom:8px;display:block}
+.hidden{display:none!important}
+.section{background:var(--card);border:1px solid #2a2a3a;border-radius:14px;padding:20px;margin-bottom:16px}
+.section h3{font-size:0.8rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+input[type=text]{width:100%;padding:12px 14px;background:#0a0a14;border:1px solid #2a2a3a;border-radius:8px;color:var(--text);font-family:inherit;font-size:0.9rem;outline:none;transition:border .2s}
+input[type=text]:focus{border-color:var(--accent)}
+.btn{width:100%;padding:14px;background:var(--accent);color:white;border:none;border-radius:10px;font-family:inherit;font-size:0.9rem;font-weight:600;cursor:pointer;margin-top:12px;transition:all .2s}
+.btn:active{transform:scale(0.98)}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn.secondary{background:transparent;border:1px solid var(--accent);color:var(--accent)}
+.btn.danger{background:var(--red)}
+.btn.success{background:var(--green)}
+.status{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:0.75rem;font-weight:600}
+.status.offline{background:rgba(239,68,68,0.15);color:var(--red)}
+.status.online{background:rgba(34,197,94,0.15);color:var(--green)}
+.status.waiting{background:rgba(6,182,212,0.15);color:var(--accent2)}
+.status::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor}
+#roomCode{font-size:2rem;font-weight:700;text-align:center;letter-spacing:6px;color:var(--accent2);margin:12px 0;padding:14px;background:#0a0a14;border-radius:10px;border:1px dashed #2a2a3a}
+#qrContainer{display:flex;justify-content:center;margin:16px 0}
+#qrContainer canvas{border-radius:8px}
+.progress-wrap{margin-top:14px}
+.progress-bar{width:100%;height:6px;background:#0a0a14;border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .3s;width:0%}
+.progress-text{font-size:0.7rem;color:var(--dim);margin-top:6px;text-align:center}
+.viewer-count{font-size:0.8rem;color:var(--dim);text-align:center;margin-top:8px}
+video{width:100%;border-radius:10px;background:#000;margin-top:14px;max-height:60vh}
+.drop-zone{border:2px dashed #2a2a3a;border-radius:12px;padding:32px 16px;text-align:center;cursor:pointer;transition:all .2s;color:var(--dim);font-size:0.85rem}
+.drop-zone.dragover{border-color:var(--accent);background:rgba(124,58,237,0.05);color:var(--text)}
+.drop-zone .icon{font-size:2.2rem;display:block;margin-bottom:8px}
+.file-info{margin-top:12px;padding:10px 14px;background:#0a0a14;border-radius:8px;font-size:0.8rem;color:var(--dim);display:flex;justify-content:space-between;align-items:center}
+.file-info .name{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%}
+.log{margin-top:14px;padding:12px;background:#060610;border-radius:8px;font-size:0.7rem;color:var(--dim);max-height:120px;overflow-y:auto;font-family:monospace}
+.log div{padding:2px 0;border-bottom:1px solid #1a1a2a}
+.log .time{color:var(--accent2);margin-right:6px}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.65rem;font-weight:600;margin-left:6px}
+.badge.host{background:rgba(124,58,237,0.2);color:var(--accent)}
+.badge.viewer{background:rgba(6,182,212,0.2);color:var(--accent2)}
+.back-btn{background:none;border:none;color:var(--dim);font-family:inherit;font-size:0.8rem;cursor:pointer;padding:8px 0;display:flex;align-items:center;gap:4px}
+.back-btn:hover{color:var(--text)}
+</style>
+</head>
+<body>
+
+<div class="logo">
+  <h1>👻 <span>GhostStream</span></h1>
+  <p>P2P ephemeral video streaming · nothing stored · pure transit</p>
+</div>
+
+<div class="container">
+  <!-- Landing / Mode Select -->
+  <div id="landing">
+    <div class="mode-select">
+      <button class="mode-btn" onclick="showBroadcast()">
+        <span class="icon">📡</span>
+        Broadcast<br><small style="color:var(--dim)">Stream a video file</small>
+      </button>
+      <button class="mode-btn" onclick="showWatch()">
+        <span class="icon">👀</span>
+        Watch<br><small style="color:var(--dim)">Join a room</small>
+      </button>
+    </div>
+    <div class="section" style="text-align:center;color:var(--dim);font-size:0.75rem;line-height:1.6">
+      Videos stream peer-to-peer in real-time.<br>
+      Nothing is uploaded to any server.<br>
+      Data is downloaded and discarded as it plays.<br>
+      <strong style="color:var(--accent2)">When the broadcaster closes, it's gone.</strong>
+    </div>
+  </div>
+
+  <!-- BROADCAST MODE -->
+  <div id="broadcastMode" class="hidden">
+    <button class="back-btn" onclick="goHome()">← Back</button>
+    <div class="section">
+      <h3>📡 Select Video to Broadcast</h3>
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <span class="icon">🎬</span>
+        Tap to select a video file<br>
+        <small>or drag & drop</small>
+      </div>
+      <input type="file" id="fileInput" accept="video/*" class="hidden">
+      <div id="fileInfo" class="hidden">
+        <div class="file-info">
+          <span class="name" id="fileName"></span>
+          <span id="fileSize"></span>
+        </div>
+        <button class="btn" id="startBtn" onclick="startBroadcast()">🚀 Start Broadcasting</button>
+      </div>
+    </div>
+
+    <div id="broadcastControls" class="hidden">
+      <div class="section">
+        <h3>Room Details <span class="badge host">HOST</span></h3>
+        <div class="status waiting" id="hostStatus">Initializing...</div>
+        <div id="roomCode">------</div>
+        <div id="qrContainer"></div>
+        <div class="viewer-count" id="viewerCount">0 viewers connected</div>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="uploadProgress"></div></div>
+          <div class="progress-text" id="uploadProgressText">Waiting for viewers...</div>
+        </div>
+        <button class="btn danger" onclick="stopBroadcast()">⏹ Stop Broadcast</button>
+      </div>
+      <div class="log" id="hostLog"></div>
+    </div>
+  </div>
+
+  <!-- WATCH MODE -->
+  <div id="watchMode" class="hidden">
+    <button class="back-btn" onclick="goHome()">← Back</button>
+    <div class="section">
+      <h3>👀 Join a Broadcast</h3>
+      <input type="text" id="joinCode" placeholder="Enter room code..." maxlength="8" autocomplete="off">
+      <button class="btn" onclick="joinRoom()">Connect</button>
+    </div>
+    <div id="watchPlayer" class="hidden">
+      <div class="section">
+        <h3>Now Watching <span class="badge viewer">VIEWER</span></h3>
+        <div class="status waiting" id="watchStatus">Connecting...</div>
+        <video id="videoPlayer" controls playsinline autoplay></video>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="bufferProgress"></div></div>
+          <div class="progress-text" id="bufferText">Buffering...</div>
+        </div>
+        <button class="btn danger" onclick="leaveRoom()">👋 Leave</button>
+      </div>
+      <div class="log" id="watchLog"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ GLOBAL STATE ============
+let peer = null;
+let myPeerId = null;
+let connections = [];
+let file = null;
+let isBroadcasting = false;
+let mediaSource = null;
+let sourceBuffer = null;
+let receivedBytes = 0;
+let totalBytes = 0;
+let chunkQueue = [];
+let isAppending = false;
+let chunkSize = 64 * 1024; // 64KB
+let sendInterval = null;
+let purgeInterval = null;
+
+// ============ NAVIGATION ============
+function goHome() {
+  cleanupAll();
+  document.getElementById('landing').classList.remove('hidden');
+  document.getElementById('broadcastMode').classList.add('hidden');
+  document.getElementById('watchMode').classList.add('hidden');
+}
+
+function showBroadcast() {
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('broadcastMode').classList.remove('hidden');
+  setupDropZone();
+}
+
+function showWatch() {
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('watchMode').classList.remove('hidden');
+  document.getElementById('joinCode').focus();
+}
+
+// ============ LOGGING ============
+function log(elementId, msg) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const time = new Date().toLocaleTimeString('en', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  const div = document.createElement('div');
+  div.innerHTML = `<span class="time">[${time}]</span>${msg}`;
+  el.prepend(div);
+  while (el.children.length > 30) el.removeChild(el.lastChild);
+}
+
+// ============ FILE SELECTION (BROADCAST) ============
+function setupDropZone() {
+  const dz = document.getElementById('dropZone');
+  const fi = document.getElementById('fileInput');
+  
+  dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('dragover'); };
+  dz.ondragleave = () => dz.classList.remove('dragover');
+  dz.ondrop = (e) => {
+    e.preventDefault();
+    dz.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+  };
+  
+  fi.onchange = () => { if (fi.files.length > 0) handleFile(fi.files[0]); };
+}
+
+function handleFile(f) {
+  if (!f.type.startsWith('video/')) {
+    alert('Please select a video file');
+    return;
+  }
+  file = f;
+  document.getElementById('fileName').textContent = f.name;
+  document.getElementById('fileSize').textContent = formatBytes(f.size);
+  document.getElementById('fileInfo').classList.remove('hidden');
+  document.getElementById('dropZone').classList.add('hidden');
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
+  return (bytes / 1073741824).toFixed(2) + ' GB';
+}
+
+// ============ BROADCAST ============
+async function startBroadcast() {
+  if (!file) return;
+  
+  const btn = document.getElementById('startBtn');
+  btn.disabled = true;
+  btn.textContent = 'Initializing...';
+  
+  // Create peer with a short readable ID
+  const roomId = generateRoomId();
+  peer = new Peer(roomId, { debug: 1 });
+  
+  peer.on('open', (id) => {
+    myPeerId = id;
+    isBroadcasting = true;
+    
+    document.getElementById('broadcastControls').classList.remove('hidden');
+    document.getElementById('roomCode').textContent = id;
+    document.getElementById('hostStatus').textContent = 'Online — waiting for viewers';
+    document.getElementById('hostStatus').className = 'status online';
+    
+    // Generate QR code
+    const url = `${window.location.origin}${window.location.pathname}#join=${id}`;
+    QRCode.toCanvas(document.createElement('canvas'), url, { width: 180, margin: 2 }, (err, canvas) => {
+      if (!err) {
+        const qc = document.getElementById('qrContainer');
+        qc.innerHTML = '';
+        qc.appendChild(canvas);
+      }
+    });
+    
+    log('hostLog', `Room created: <strong>${id}</strong>`);
+    log('hostLog', `File: ${file.name} (${formatBytes(file.size)})`);
+  });
+  
+  peer.on('connection', (conn) => {
+    connections.push(conn);
+    log('hostLog', `Viewer connected (${connections.length} total)`);
+    updateViewerCount();
+    updateHostStatus();
+    
+    // Send file metadata first
+    conn.on('open', () => {
+      conn.send(JSON.stringify({
+        type: 'meta',
+        name: file.name,
+        size: file.size,
+        mime: file.type || 'video/mp4'
+      }));
+      
+      // Start sending chunks to this viewer
+      sendFileToViewer(conn);
+    });
+    
+    conn.on('close', () => {
+      connections = connections.filter(c => c !== conn);
+      log('hostLog', `Viewer disconnected (${connections.length} remaining)`);
+      updateViewerCount();
+      updateHostStatus();
+    });
+    
+    conn.on('error', (err) => {
+      log('hostLog', `Connection error: ${err}`);
+    });
+  });
+  
+  peer.on('error', (err) => {
+    log('hostLog', `Peer error: ${err.type}`);
+    document.getElementById('hostStatus').textContent = 'Error: ' + err.type;
+    document.getElementById('hostStatus').className = 'status offline';
+  });
+}
+
+function generateRoomId() {
+  const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  let id = 'gs';
+  for (let i = 0; i < 6; i++) {
+    id += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return id;
+}
+
+async function sendFileToViewer(conn) {
+  let offset = 0;
+  
+  const sendNext = () => {
+    if (!isBroadcasting || !conn.open) return;
+    if (offset >= file.size) {
+      conn.send(JSON.stringify({ type: 'end' }));
+      log('hostLog', `Finished sending to viewer`);
+      return;
+    }
+    
+    const chunk = file.slice(offset, offset + chunkSize);
+    chunk.arrayBuffer().then(buffer => {
+      try {
+        conn.send(buffer);
+        offset += chunkSize;
+        
+        // Update progress (throttled)
+        const pct = Math.round((offset / file.size) * 100);
+        document.getElementById('uploadProgress').style.width = pct + '%';
+        document.getElementById('uploadProgressText').textContent = 
+          `Streaming: ${formatBytes(offset)} / ${formatBytes(file.size)} (${pct}%)`;
+        
+        // Send next chunk after a small delay to avoid overwhelming
+        setTimeout(sendNext, 5);
+      } catch (e) {
+        log('hostLog', `Send error: ${e.message}`);
+      }
+    });
+  };
+  
+  sendNext();
+}
+
+function updateViewerCount() {
+  document.getElementById('viewerCount').textContent = 
+    `${connections.length} viewer${connections.length !== 1 ? 's' : ''} connected`;
+}
+
+function updateHostStatus() {
+  const el = document.getElementById('hostStatus');
+  if (connections.length > 0) {
+    el.textContent = `Streaming to ${connections.length}`;
+    el.className = 'status online';
+  } else {
+    el.textContent = 'Online — waiting for viewers';
+    el.className = 'status waiting';
+  }
+}
+
+function stopBroadcast() {
+  if (confirm('Stop broadcasting? All viewers will be disconnected.')) {
+    cleanupAll();
+    goHome();
+  }
+}
+
+// ============ WATCH (VIEWER) ============
+function joinRoom() {
+  let code = document.getElementById('joinCode').value.trim().toLowerCase();
+  
+  // Check URL hash
+  if (!code && window.location.hash.startsWith('#join=')) {
+    code = window.location.hash.replace('#join=', '');
+  }
+  
+  if (!code) {
+    alert('Please enter a room code');
+    return;
+  }
+  
+  document.getElementById('watchPlayer').classList.remove('hidden');
+  document.getElementById('watchStatus').textContent = 'Connecting...';
+  document.getElementById('watchStatus').className = 'status waiting';
+  
+  peer = new Peer({ debug: 1 });
+  
+  peer.on('open', (id) => {
+    log('watchLog', `My ID: ${id}`);
+    log('watchLog', `Connecting to room: ${code}`);
+    
+    const conn = peer.connect(code, { reliable: true });
+    
+    conn.on('open', () => {
+      log('watchLog', 'Connected to broadcaster!');
+      document.getElementById('watchStatus').textContent = 'Connected';
+      document.getElementById('watchStatus').className = 'status online';
+      setupMediaSource();
+    });
+    
+    conn.on('data', (data) => {
+      if (data instanceof ArrayBuffer) {
+        handleVideoChunk(data);
+      } else if (typeof data === 'string') {
+        try {
+          const msg = JSON.parse(data);
+          if (msg.type === 'meta') {
+            totalBytes = msg.size;
+            log('watchLog', `Video: ${msg.name} (${formatBytes(msg.size)})`);
+            document.getElementById('bufferText').textContent = `Receiving: ${msg.name}`;
+          } else if (msg.type === 'end') {
+            log('watchLog', 'Broadcast complete');
+            document.getElementById('watchStatus').textContent = 'Ended';
+            document.getElementById('watchStatus').className = 'status offline';
+          }
+        } catch (e) {}
+      }
+    });
+    
+    conn.on('close', () => {
+      log('watchLog', 'Broadcaster disconnected');
+      document.getElementById('watchStatus').textContent = 'Disconnected';
+      document.getElementById('watchStatus').className = 'status offline';
+    });
+    
+    conn.on('error', (err) => {
+      log('watchLog', `Error: ${err}`);
+    });
+  });
+  
+  peer.on('error', (err) => {
+    log('watchLog', `Peer error: ${err.type}`);
+    document.getElementById('watchStatus').textContent = 'Error: ' + err.type;
+    document.getElementById('watchStatus').className = 'status offline';
+  });
+}
+
+function setupMediaSource() {
+  const video = document.getElementById('videoPlayer');
+  
+  mediaSource = new MediaSource();
+  const url = URL.createObjectURL(mediaSource);
+  video.src = url;
+  
+  mediaSource.addEventListener('sourceopen', () => {
+    log('watchLog', 'MediaSource opened');
+    
+    // Try different codecs
+    const codecs = [
+      'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
+      'video/webm; codecs="vp8, opus"',
+      'video/webm; codecs="vp9, opus"',
+      'video/mp4; codecs="avc1.64001F, mp4a.40.2"'
+    ];
+    
+    let selectedCodec = null;
+    for (const codec of codecs) {
+      if (MediaSource.isTypeSupported(codec)) {
+        selectedCodec = codec;
+        break;
+      }
+    }
+    
+    if (!selectedCodec) {
+      log('watchLog', 'No supported codec found');
+      return;
+    }
+    
+    log('watchLog', `Using codec: ${selectedCodec}`);
+    sourceBuffer = mediaSource.addSourceBuffer(selectedCodec);
+    sourceBuffer.mode = 'segments';
+    sourceBuffer.timestampOffset = 0;
+    
+    sourceBuffer.addEventListener('updateend', processQueue);
+    sourceBuffer.addEventListener('error', (e) => log('watchLog', 'SourceBuffer error'));
+    
+    // Start purge interval - remove played data (downloaded + deleted)
+    purgeInterval = setInterval(purgeOldBuffer, 5000);
+  });
+}
+
+function handleVideoChunk(buffer) {
+  receivedBytes += buffer.byteLength;
+  chunkQueue.push(buffer);
+  
+  // Update progress
+  if (totalBytes > 0) {
+    const pct = Math.round((receivedBytes / totalBytes) * 100);
+    document.getElementById('bufferProgress').style.width = pct + '%';
+    document.getElementById('bufferText').textContent = 
+      `Streamed: ${formatBytes(receivedBytes)} / ${formatBytes(totalBytes)} (${pct}%)`;
+  }
+  
+  processQueue();
+}
+
+function processQueue() {
+  if (!sourceBuffer || isAppending || chunkQueue.length === 0) return;
+  if (sourceBuffer.updating) return;
+  
+  isAppending = true;
+  const chunk = chunkQueue.shift();
+  
+  try {
+    sourceBuffer.appendBuffer(chunk);
+  } catch (e) {
+    log('watchLog', `Append error: ${e.message}`);
+    // If quota exceeded, purge and retry
+    if (e.name === 'QuotaExceededError') {
+      purgeOldBuffer();
+      setTimeout(() => {
+        isAppending = false;
+        processQueue();
+      }, 100);
+      return;
+    }
+  }
+  
+  sourceBuffer.addEventListener('updateend', function onEnd() {
+    sourceBuffer.removeEventListener('updateend', onEnd);
+    isAppending = false;
+    processQueue();
+  });
+}
+
+function purgeOldBuffer() {
+  const video = document.getElementById('videoPlayer');
+  if (!sourceBuffer || sourceBuffer.updating) return;
+  if (sourceBuffer.buffered.length === 0) return;
+  
+  const currentTime = video.currentTime;
+  const bufferedEnd = sourceBuffer.buffered.end(sourceBuffer.buffered.length - 1);
+  
+  // Keep 10 seconds behind current time, 30 seconds ahead
+  if (currentTime > 15) {
+    const removeEnd = currentTime - 10;
+    if (removeEnd > 0) {
+      try {
+        sourceBuffer.remove(0, removeEnd);
+        log('watchLog', `Purged buffer: 0 → ${removeEnd.toFixed(1)}s`);
+      } catch (e) {}
+    }
+  }
+}
+
+function leaveRoom() {
+  cleanupAll();
+  goHome();
+}
+
+// ============ CLEANUP ============
+function cleanupAll() {
+  isBroadcasting = false;
+  
+  if (sendInterval) clearInterval(sendInterval);
+  if (purgeInterval) clearInterval(purgeInterval);
+  
+  connections.forEach(conn => {
+    try { conn.close(); } catch(e) {}
+  });
+  connections = [];
+  
+  if (peer) {
+    try { peer.destroy(); } catch(e) {}
+    peer = null;
+  }
+  
+  if (sourceBuffer) {
+    try { sourceBuffer.abort(); } catch(e) {}
+    sourceBuffer = null;
+  }
+  
+  if (mediaSource) {
+    try { 
+      if (mediaSource.readyState === 'open') mediaSource.endOfStream();
+    } catch(e) {}
+    mediaSource = null;
+  }
+  
+  const video = document.getElementById('videoPlayer');
+  if (video) {
+    video.pause();
+    video.src = '';
+    video.load();
+  }
+  
+  chunkQueue = [];
+  receivedBytes = 0;
+  totalBytes = 0;
+  isAppending = false;
+  
+  // Reset UI
+  document.getElementById('uploadProgress').style.width = '0%';
+  document.getElementById('uploadProgressText').textContent = 'Waiting...';
+  document.getElementById('bufferProgress').style.width = '0%';
+  document.getElementById('bufferText').textContent = 'Buffering...';
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('startBtn').textContent = '🚀 Start Broadcasting';
+  document.getElementById('broadcastControls').classList.add('hidden');
+  document.getElementById('watchPlayer').classList.add('hidden');
+  document.getElementById('fileInfo').classList.add('hidden');
+  document.getElementById('dropZone').classList.remove('hidden');
+  document.getElementById('joinCode').value = '';
+}
+
+// ============ URL HASH HANDLING ============
+window.addEventListener('load', () => {
+  if (window.location.hash.startsWith('#join=')) {
+    const code = window.location.hash.replace('#join=', '');
+    document.getElementById('joinCode').value = code;
+    showWatch();
+    // Auto-connect after short delay
+    setTimeout(() => joinRoom(), 500);
+  }
+});
+
+// ============ KEYBOARD ============
+document.getElementById('joinCode').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') joinRoom();
+});
+</script>
+
+</body>
+</html>

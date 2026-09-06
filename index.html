@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0f0f0f">
 <title>GHOSTSTREAM</title>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -21,25 +22,28 @@ input{font-family:inherit}
 body.pre #hdr,body.pre #nav,body.pre #view{display:none}
 body.pre .onb{display:block}
 
-/* header */
 #hdr{position:fixed;top:0;left:0;right:0;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(15,15,15,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:20}
 .wm{font-weight:800;letter-spacing:.14em;font-size:15px;display:flex;align-items:center;gap:8px}
 .wm-dot{width:8px;height:8px;background:var(--live);display:inline-block}
 .wm .thin{color:var(--dim);font-weight:400}
 .hdr-r{display:flex;align-items:center;gap:14px}
-#netDot{width:8px;height:8px;border-radius:50%;background:#3a3a3a;display:inline-block}
+.hdr-s{font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--faint)}
+.hdr-s.on{color:var(--text)}
+.hdr-s.er{color:var(--live)}
+#netDot{width:7px;height:7px;border-radius:50%;background:#3a3a3a;display:inline-block}
 #netDot.on{background:#f1f1f1}
+#netDot.er{background:var(--live)}
+#netDot.pu{animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 .iconb{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:var(--dim)}
 .iconb:active{background:var(--surface2);color:var(--text)}
 
-/* nav */
 #nav{position:fixed;bottom:0;left:0;right:0;height:calc(60px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#0f0f0f;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr 72px 1fr 1fr;z-index:20}
 .nv{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--faint);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
 .nv.on{color:var(--text)}
 .nv span{font-size:9.5px}
 .fab{align-self:center;justify-self:center;width:52px;height:52px;border-radius:50%;background:#f1f1f1;color:#0f0f0f;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 14px rgba(0,0,0,.5)}
 
-/* layout */
 #view{max-width:760px;margin:0 auto;padding:76px 14px calc(84px + env(safe-area-inset-bottom))}
 .sect{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:22px 0 10px;font-weight:600}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
@@ -47,7 +51,6 @@ body.pre .onb{display:block}
 .i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .i.big{width:34px;height:34px;color:var(--faint)}
 
-/* buttons + inputs */
 .btn{background:#f1f1f1;color:#0f0f0f;border-radius:8px;padding:13px 18px;font-weight:700;font-size:14px;letter-spacing:.02em}
 .btn:active{transform:scale(.98)}
 .btn.ghost{background:transparent;border:1px solid #3a3a3a;color:var(--text)}
@@ -59,12 +62,10 @@ body.pre .onb{display:block}
 .inp:focus{border-color:#4a4a4a}
 .lbl{display:block;font-size:10px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin:16px 0 8px;font-weight:600}
 
-/* avatars */
 .av{width:26px;height:26px;border-radius:50%;background:var(--surface2);border:1px solid #3a3a3a;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--dim);flex:none}
 .av.big{width:40px;height:40px;font-size:16px}
 .av.xl{width:56px;height:56px;font-size:22px}
 
-/* feed */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px 14px}
 .card{cursor:pointer}
 .thumb{position:relative;aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
@@ -76,7 +77,6 @@ body.pre .onb{display:block}
 .chip.live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--live);animation:pulse 1.6s infinite}
 .chip.live.off{color:var(--faint);border-color:#3a3a3a}
 .chip.live.off::before{background:var(--faint);animation:none}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .c-body{padding:9px 2px 0}
 .c-title{font-size:14.5px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .c-meta{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px;color:var(--dim)}
@@ -87,7 +87,6 @@ body.pre .onb{display:block}
 .empty b{display:block;color:var(--text);margin-bottom:5px;font-size:15px}
 .empty p{font-size:13px;max-width:280px;margin:0 auto}
 
-/* watch */
 .watch{margin:-16px -14px 0}
 .vwrap{aspect-ratio:16/9;background:#000;max-height:56vh}
 .vwrap video{width:100%;height:100%;display:block;background:#000}
@@ -102,7 +101,6 @@ body.pre .onb{display:block}
 .woff{margin-top:16px;border:1px solid var(--line);border-radius:8px;padding:16px;background:var(--surface)}
 .woff p{font-size:14px;margin-bottom:12px}
 
-/* identity / you */
 .idcard{display:flex;align-items:center;gap:14px}
 .idb{flex:1;min-width:0}
 .idname{font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px}
@@ -113,40 +111,56 @@ body.pre .onb{display:block}
 .invite-row{display:flex;gap:10px;margin-top:20px}
 .invite-row .btn{flex:1}
 
-/* publish */
 .pub-empty{text-align:center;padding:46px 20px}
 .pub-empty h2{margin:16px 0 6px;font-size:17px}
 .pub-empty p{color:var(--dim);font-size:13.5px;max-width:300px;margin:0 auto 20px}
 .pub-empty .btn{min-width:220px}
 .pub-file{display:flex;align-items:center;gap:12px;padding:12px;background:#101010;border:1px solid var(--line);border-radius:8px;font-size:13.5px;word-break:break-all}
 
-/* rows / activity */
 .row{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--line);cursor:pointer}
 .row-b{flex:1;min-width:0;font-size:13.5px;color:var(--dim)}
 .row-b b{color:var(--text);font-weight:600}
 .row-b .dim{font-size:11.5px;margin-top:2px}
+.pdot{width:7px;height:7px;border-radius:50%;background:#3a3a3a;flex:none}
+.pdot.on{background:#f1f1f1}
 
-/* onboarding */
 .onb{display:none;min-height:100vh;padding:80px 28px 40px;max-width:420px;margin:0 auto}
 .onb .wm{font-size:20px;margin-bottom:8px}
 .onb h1{font-size:22px;margin:26px 0 8px;letter-spacing:-.01em}
 .onb p{color:var(--dim);font-size:14px;margin-bottom:28px}
 .onb .fine{margin-top:18px;line-height:1.6}
 
-/* sheet */
 #sheet{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;display:flex;align-items:flex-end;justify-content:center}
 .sh{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--line);border-radius:14px 14px 0 0;padding:22px 20px calc(24px + env(safe-area-inset-bottom))}
 .sh h3{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:16px;font-weight:600}
 .sh-code{font-size:26px;font-weight:800;letter-spacing:.22em;text-align:center;padding:14px;border:1px dashed #3a3a3a;border-radius:8px;margin-bottom:14px}
+.qr-w{background:#f1f1f1;padding:6px;line-height:0;display:inline-block}
+.qr-w canvas{display:block;width:180px;height:180px;image-rendering:pixelated}
 #qrBox{display:flex;justify-content:center;margin:6px 0 16px}
 .sh-note{font-size:12px;color:var(--faint);margin-top:12px;text-align:center;line-height:1.6}
 .sh-btns{display:flex;gap:10px;margin-top:6px}
 .sh-btns .btn{flex:1}
+.cn-row{display:flex;gap:8px;margin-top:4px}
+.cn-row .inp{flex:1;min-width:0}
+.scan-btn{width:48px;height:48px;background:#101010;border:1px solid var(--line);color:var(--dim);display:flex;align-items:center;justify-content:center;flex:none}
+.scan-btn:active{background:var(--surface2);color:var(--text)}
 
-/* toast */
 #toasts{position:fixed;bottom:calc(78px + env(safe-area-inset-bottom));left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:60;pointer-events:none}
 .toast{background:#262626;border:1px solid #3a3a3a;color:var(--text);font-size:13px;padding:10px 16px;border-radius:8px;max-width:86%;opacity:0;transform:translateY(8px);transition:all .25s}
 .toast.on{opacity:1;transform:none}
+
+.scan-ov{position:fixed;inset:0;background:#000;z-index:80;display:none;flex-direction:column}
+.scan-ov.show{display:flex}
+.scan-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
+.scan-t{font-size:11px;font-weight:800;letter-spacing:.2em}
+.scan-area{flex:1;position:relative;overflow:hidden}
+#gsReader{width:100%;height:100%}
+#gsReader video{width:100%;height:100%;object-fit:cover}
+.scan-box{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:72%;max-width:300px;aspect-ratio:1/1;border:2px solid rgba(241,241,241,.15);box-shadow:0 0 0 9999px rgba(0,0,0,.65);pointer-events:none}
+.scan-box::before,.scan-box::after{content:'';position:absolute;width:24px;height:24px;border-color:#f1f1f1;border-style:solid}
+.scan-box::before{top:-2px;left:-2px;border-width:4px 0 0 4px}
+.scan-box::after{bottom:-2px;right:-2px;border-width:0 4px 4px 0}
+.scan-hint{position:absolute;bottom:12%;left:0;right:0;text-align:center;font-size:12px;color:#8a8a8a;letter-spacing:.08em}
 
 @media(min-width:700px){
   #sheet{align-items:center}
@@ -159,6 +173,7 @@ body.pre .onb{display:block}
 <header id="hdr">
   <div class="wm"><span class="wm-dot"></span>GHOST<span class="thin">STREAM</span></div>
   <div class="hdr-r">
+    <span class="hdr-s" id="netTxt">OFFLINE</span>
     <span id="netDot"></span>
     <button class="iconb" data-act="add-friend"><svg class="i"><use href="#i-qr"/></svg></button>
   </div>
@@ -178,6 +193,18 @@ body.pre .onb{display:block}
 <div id="toasts"></div>
 <input type="file" id="fpick" accept="video/*" class="hidden">
 
+<div class="scan-ov" id="scanOv">
+  <div class="scan-hdr">
+    <span class="scan-t">SCAN CODE</span>
+    <button class="iconb" data-act="scan-close" style="color:var(--text)"><svg class="i"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="scan-area">
+    <div id="gsReader"></div>
+    <div class="scan-box"></div>
+    <div class="scan-hint">Point at a GhostStream invite code</div>
+  </div>
+</div>
+
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
   <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></symbol>
   <symbol id="i-subs" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M10 13.5v4l4-2z" fill="currentColor" stroke="none"/></symbol>
@@ -185,103 +212,135 @@ body.pre .onb{display:block}
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 16H6c1.2-1.4 2-2.5 2-6a4 4 0 1 1 8 0c0 3.5.8 4.6 2 6z"/><path d="M10.5 19a1.5 1.5 0 0 0 3 0"/></symbol>
   <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.2-3.2 3.8-5 7-5s5.8 1.8 7 5"/></symbol>
   <symbol id="i-qr" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2.5v2.5H14zM20 14v.01M14 20v.01M17.5 17.5v.01M20 20v.01"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></symbol>
-  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></symbol>
   <symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/></symbol>
-  <symbol id="i-chevl" viewBox="0 0 24 24"><path d="M14 6l-6 6 6 6"/></symbol>
   <symbol id="i-chevr" viewBox="0 0 24 24"><path d="M10 6l6 6-6 6"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></symbol>
-  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></symbol>
   <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5v.01M7 16.5v.01"/></symbol>
 </svg>
 
 <script>
 /* ================= utils ================= */
-const $=s=>document.querySelector(s);
-function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]})}
 function fmtB(n){n=+n||0;if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';if(n<1073741824)return(n/1048576).toFixed(1)+' MB';return(n/1073741824).toFixed(2)+' GB'}
-function fmtT(s){s=+s||0;if(!isFinite(s)||s<=0)return'0:00';s=Math.round(s);const m=Math.floor(s/60),r=s%60,h=Math.floor(m/60);return h?h+':'+String(m%60).padStart(2,'0')+':'+String(r).padStart(2,'0'):m+':'+String(r).padStart(2,'0')}
-function ago(ts){const d=Date.now()-ts;if(d<60e3)return'just now';if(d<3600e3)return Math.floor(d/60e3)+'m ago';if(d<86400e3)return Math.floor(d/3600e3)+'h ago';if(d<604800e3)return Math.floor(d/86400e3)+'d ago';return new Date(ts).toLocaleDateString()}
-function rid(n){const c='abcdefghjkmnpqrstuvwxyz23456789';let s='';for(let i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
-function toast(msg,ms=3400){const t=document.createElement('div');t.className='toast';t.textContent=msg;$('#toasts').appendChild(t);requestAnimationFrame(()=>t.classList.add('on'));setTimeout(()=>{t.classList.remove('on');setTimeout(()=>t.remove(),300)},ms)}
+function fmtT(s){s=+s||0;if(!isFinite(s)||s<=0)return'0:00';s=Math.round(s);var m=Math.floor(s/60),r=s%60,h=Math.floor(m/60);return h?h+':'+String(m%60).padStart(2,'0')+':'+String(r).padStart(2,'0'):m+':'+String(r).padStart(2,'0')}
+function ago(ts){var d=Date.now()-ts;if(d<60e3)return'just now';if(d<3600e3)return Math.floor(d/60e3)+'m ago';if(d<86400e3)return Math.floor(d/3600e3)+'h ago';if(d<604800e3)return Math.floor(d/86400e3)+'d ago';return new Date(ts).toLocaleDateString()}
+function rid(n){var c='abcdefghjkmnpqrstuvwxyz23456789',s='';for(var i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
+function toast(msg,ms){ms=ms||3400;var t=document.createElement('div');t.className='toast';t.textContent=msg;$('#toasts').appendChild(t);requestAnimationFrame(function(){t.classList.add('on')});setTimeout(function(){t.classList.remove('on');setTimeout(function(){t.remove()},300)},ms)}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+
+/* ================= directdrop: wake lock ================= */
+var wakeLock=null;
+async function reqWake(){try{wakeLock=await navigator.wakeLock.request('screen')}catch(e){}}
+function relWake(){if(wakeLock){wakeLock.release().then(function(){wakeLock=null}).catch(function(){wakeLock=null})}}
+
+/* ================= directdrop: header net status ================= */
+function setHdr(state){
+  var t=$('#netTxt'),d=$('#netDot');if(!t||!d)return;
+  d.classList.remove('on','er','pu');
+  if(state==='on'){t.textContent='ONLINE';t.className='hdr-s on';d.classList.add('on')}
+  else if(state==='er'){t.textContent='NETWORK DOWN';t.className='hdr-s er';d.classList.add('er')}
+  else if(state==='re'){t.textContent='RECONNECTING';t.className='hdr-s';d.classList.add('pu')}
+  else{t.textContent='OFFLINE';t.className='hdr-s'}
+}
 
 /* ================= idb ================= */
-const idb={
+var idb={
   db:null,
-  open(){return new Promise((res,rej)=>{const r=indexedDB.open('ghoststream',1);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('handles'))d.createObjectStore('handles');if(!d.objectStoreNames.contains('manifests'))d.createObjectStore('manifests')};r.onsuccess=()=>{idb.db=r.result;res()};r.onerror=()=>rej(r.error)})},
-  tx(store,mode,fn){return new Promise((res,rej)=>{const t=idb.db.transaction(store,mode);const q=fn(t.objectStore(store));q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})},
-  put:(st,k,v)=>idb.tx(st,'readwrite',s=>s.put(v,k)),
-  get:(st,k)=>idb.tx(st,'readonly',s=>s.get(k)),
-  del:(st,k)=>idb.tx(st,'readwrite',s=>s.delete(k)),
-  keys:(st)=>idb.tx(st,'readonly',s=>s.getAllKeys()),
-  all:(st)=>idb.tx(st,'readonly',s=>s.getAll())
+  open:function(){return new Promise(function(res,rej){var r=indexedDB.open('ghoststream',1);r.onupgradeneeded=function(){var d=r.result;if(!d.objectStoreNames.contains('handles'))d.createObjectStore('handles');if(!d.objectStoreNames.contains('manifests'))d.createObjectStore('manifests')};r.onsuccess=function(){idb.db=r.result;res()};r.onerror=function(){rej(r.error)}})},
+  tx:function(store,mode,fn){return new Promise(function(res,rej){var t=idb.db.transaction(store,mode);var q=fn(t.objectStore(store));q.onsuccess=function(){res(q.result)};q.onerror=function(){rej(q.error)}})},
+  put:function(st,k,v){return idb.tx(st,'readwrite',function(s){return s.put(v,k)})},
+  get:function(st,k){return idb.tx(st,'readonly',function(s){return s.get(k)})},
+  del:function(st,k){return idb.tx(st,'readwrite',function(s){return s.delete(k)})},
+  keys:function(st){return idb.tx(st,'readonly',function(s){return s.getAllKeys()})},
+  all:function(st){return idb.tx(st,'readonly',function(s){return s.getAll()})}
 };
 
-/* ================= identity ================= */
-const me={uid:null,name:null};
-function loadMe(){try{const m=JSON.parse(localStorage.getItem('gs-me')||'null');if(m&&m.uid){me.uid=m.uid;me.name=m.name||'Anonymous'}}catch(e){}}
+/* ================= identity (directdrop callsign pattern) ================= */
+var me={uid:null,name:null};
+function loadMe(){try{var m=JSON.parse(localStorage.getItem('gs-me')||'null');if(m&&m.uid){me.uid=m.uid;me.name=m.name||'Anonymous'}}catch(e){}}
 function saveMe(){localStorage.setItem('gs-me',JSON.stringify({uid:me.uid,name:me.name}))}
-let pendingRoute=null;
 
-let peer=null;
-const conns=new Map();
-function tryPeer(id){return new Promise((res,rej)=>{
-  const p=new Peer(id,{debug:0});let done=false;
-  p.on('open',()=>{done=true;peer=p;
-    p.on('connection',c=>wireConn(c));
-    p.on('disconnected',()=>{try{p.reconnect()}catch(e){}});
-    $('#netDot').classList.add('on');res(true);
+/* directdrop: local name + recents caches for instant cold-start render */
+function getLocalNames(){try{return JSON.parse(localStorage.getItem('gs-names')||'{}')}catch(e){return{}}}
+function savePeerName(id,name){if(!id||!name)return;var n=getLocalNames();n[id]=name;try{localStorage.setItem('gs-names',JSON.stringify(n))}catch(e){}}
+function getRecents(){try{return JSON.parse(localStorage.getItem('gs-recents')||'[]')}catch(e){return[]}}
+function addRecent(id){if(!id)return;var r=getRecents();r=r.filter(function(x){return x!==id});r.unshift(id);if(r.length>15)r=r.slice(0,15);localStorage.setItem('gs-recents',JSON.stringify(r))}
+
+var viewFn=null;
+function renderCurrent(){if(viewFn)viewFn()}
+
+var peer=null;
+var conns=new Map();
+function tryPeer(id){return new Promise(function(res,rej){
+  var p=new Peer(id,{debug:0});var settled=false;
+  p.on('open',function(){
+    if(settled)return;settled=true;peer=p;
+    p.on('connection',function(c){
+      if(c.metadata&&c.metadata.ping){c.on('open',function(){try{c.close()}catch(e){}});return}
+      wireConn(c);
+    });
+    p.on('disconnected',function(){setHdr('re');try{p.reconnect()}catch(e){}});
+    setHdr('on');res(true);
   });
-  p.on('error',e=>{if(done)return;try{p.destroy()}catch(x){}rej(e)});
-  setTimeout(()=>{if(!done){try{p.destroy()}catch(x){}rej(new Error('timeout'))}},9000);
+  p.on('error',function(err){
+    /* directdrop pattern: callsign conflict -> destroy and regenerate */
+    if(settled)return;settled=true;
+    try{p.destroy()}catch(e){}
+    rej(err);
+  });
 })}
 async function bootPeer(){
   if(me.uid){try{if(await tryPeer(me.uid))return}catch(e){}}
-  for(let i=0;i<6;i++){
-    const cand='gs'+rid(8);
+  for(var i=0;i<8;i++){
+    var cand='gs'+rid(8);
     try{if(await tryPeer(cand)){me.uid=cand;saveMe();return}}catch(e){}
   }
-  toast('Network init failed — reload to retry');
+  toast('Network init failed — check connection and reload');
 }
 
-/* ================= gun ================= */
-let gun,gs,users,meNode,gunInit=false;
-const friends=new Map(),videos=new Map(),profiles=new Map(),presence=new Map(),requests=new Map(),subbed=new Set();
+/* ================= gun (control plane: graph, manifests, requests) ================= */
+var gun,gs,users,meNode,gunInit=false;
+var friends=new Map(),videos=new Map(),profiles=new Map(),presence=new Map(),requests=new Map(),subbed=new Set();
 function initGun(){
   if(gunInit)return;gunInit=true;
   gun=Gun({peers:['https://gun-manhattan.herokuapp.com/gun','https://peer.wallie.io/gun']});
   gs=gun.get('ghoststream');users=gs.get('users');
   meNode=users.get(me.uid);
   meNode.get('name').put(me.name||'Anonymous');
-  meNode.get('videos').map().on((v,vid)=>upsertVideo(vid,v,me.uid));
-  meNode.get('requests').map().on((v,id)=>{
+  meNode.get('videos').map().on(function(v,vid){upsertVideo(vid,v,me.uid)});
+  meNode.get('requests').map().on(function(v,id){
     if(!v||!v.from||!v.vid)return;
-    const prev=requests.get(id);
-    requests.set(id,{from:v.from,vid:v.vid,at:v.at||Date.now(),id});
+    var prev=requests.get(id);
+    requests.set(id,{from:v.from,vid:v.vid,at:v.at||Date.now(),id:id});
     if(!prev)onIncomingRequest(v);
     renderCurrent();
   });
-  meNode.get('friends').map().on((v,uid)=>{
+  meNode.get('friends').map().on(function(v,uid){
     if(!v){friends.delete(uid);renderCurrent();return}
     friends.set(uid,v.since||Date.now());
+    addRecent(uid);
     subUser(uid);renderCurrent();
   });
   heartbeat();setInterval(heartbeat,20000);
-  setInterval(()=>renderCurrent(),15000);
+  setInterval(function(){renderCurrent()},15000);
 }
 function heartbeat(){try{meNode.get('presence').put({at:Date.now()})}catch(e){}}
 function subUser(uid){
   if(subbed.has(uid))return;subbed.add(uid);
-  users.get(uid).get('name').on(n=>{if(n){profiles.set(uid,n);renderCurrent()}});
-  users.get(uid).get('presence').on(p=>{if(p&&p.at){presence.set(uid,p.at);renderCurrent()}});
-  users.get(uid).get('videos').map().on((v,vid)=>upsertVideo(vid,v,uid));
+  users.get(uid).get('name').on(function(n){if(n){profiles.set(uid,n);savePeerName(uid,n);renderCurrent()}});
+  users.get(uid).get('presence').on(function(p){if(p&&p.at){if(!presence.has(uid))presence.set(uid,p.at);renderCurrent()}});
+  users.get(uid).get('videos').map().on(function(v,vid){upsertVideo(vid,v,uid)});
 }
 function upsertVideo(vid,v,owner){
   if(!vid)return;
   if(!v){videos.delete(vid);renderCurrent();return}
-  const cur=videos.get(vid)||{owner};
+  var cur=videos.get(vid)||{owner:owner};
   if(v.title!=null)cur.title=v.title;
   if(v.size!=null)cur.size=+v.size;
   if(v.mime!=null)cur.mime=v.mime;
@@ -291,66 +350,112 @@ function upsertVideo(vid,v,owner){
   if(!cur.postedAt)cur.postedAt=Date.now();
   videos.set(vid,cur);renderCurrent();
 }
-function fetchManifest(uid,vid){return new Promise(res=>{
-  let done=false;
-  users.get(uid).get('videos').get(vid).once(v=>{
+function fetchManifest(uid,vid){return new Promise(function(res){
+  var done=false;
+  users.get(uid).get('videos').get(vid).once(function(v){
     if(done)return;done=true;
     if(v&&v.title!=null)upsertVideo(vid,v,uid);
     res(v||videos.get(vid)||null);
   });
-  setTimeout(()=>{if(!done){done=true;res(videos.get(vid)||null)}},4000);
+  setTimeout(function(){if(!done){done=true;res(videos.get(vid)||null)}},4000);
 })}
-function isLive(uid){const at=presence.get(uid);return!!at&&(Date.now()-at<60000)}
-function displayName(uid){if(uid===me.uid)return me.name||'You';return profiles.get(uid)||uid.slice(2,8).toUpperCase()}
+function isLive(uid){
+  var at=presence.get(uid);
+  return!!at&&(Date.now()-at<70000);
+}
+function displayName(uid){
+  if(uid===me.uid)return me.name||'You';
+  return profiles.get(uid)||getLocalNames()[uid]||uid.slice(2,8).toUpperCase();
+}
 async function pairWith(uid){
   uid=(uid||'').trim().toLowerCase();
   if(!uid)return toast('Enter a code');
   if(uid===me.uid)return toast('That is your own code');
   if(!/^gs[a-z0-9]{8}$/.test(uid))return toast('Code format: gs + 8 characters');
-  const now=Date.now();
+  var now=Date.now();
   meNode.get('friends').get(uid).put({since:now});
   users.get(uid).get('friends').get(me.uid).put({since:now});
-  users.get(uid).get('name').once(n=>toast(n?('Connected with '+n):'Connected'));
-  try{const c=await getConn(uid);c.send(JSON.stringify({t:'hi'}))}catch(e){}
+  addRecent(uid);
+  users.get(uid).get('name').once(function(n){toast(n?('Connected with '+n):'Connected')});
+  try{var c=await getConn(uid);c.send(JSON.stringify({t:'profile',uid:me.uid,name:me.name}))}catch(e){}
 }
 function onIncomingRequest(v){
-  const name=displayName(v.from);
-  const vt=(videos.get(v.vid)||{}).title||'a video';
+  var name=displayName(v.from);
+  var vt=(videos.get(v.vid)||{}).title||'a video';
   toast(name+' wants to watch "'+vt+'"');
   try{getConn(v.from)}catch(e){}
 }
 
+/* ================= directdrop: presence probing ================= */
+function probePresence(pid){
+  return new Promise(function(res){
+    if(!peer||peer.destroyed)return res(false);
+    var done=false;
+    try{
+      var p=peer.connect(pid,{metadata:{ping:true},reliable:false});
+      var t=setTimeout(function(){if(!done){done=true;try{p.close()}catch(e){}res(false)}},4000);
+      p.on('open',function(){if(!done){done=true;clearTimeout(t);try{p.close()}catch(e){}res(true)}});
+      p.on('error',function(){if(!done){done=true;clearTimeout(t);try{p.close()}catch(e){}res(false)}});
+    }catch(e){res(false)}
+  });
+}
+var probing=false;
+async function refreshPresence(){
+  if(probing||document.hidden||!peer||peer.destroyed)return;
+  probing=true;
+  var ids=[];friends.forEach(function(_,uid){ids.push(uid)});
+  for(var i=0;i<ids.length;i++){
+    var ok=await probePresence(ids[i]);
+    presence.set(ids[i],ok?Date.now():(presence.get(ids[i])||0));
+    renderCurrent();
+    await sleep(120);
+  }
+  probing=false;
+}
+setInterval(refreshPresence,35000);
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden){if(peer&&peer.disconnected){try{peer.reconnect()}catch(e){}}refreshPresence()}
+});
+
+/* ================= directdrop: network status listeners ================= */
+window.addEventListener('online',function(){
+  if(peer&&peer.disconnected){try{peer.reconnect()}catch(e){}}
+  setHdr('on');
+});
+window.addEventListener('offline',function(){setHdr('er')});
+
 /* ================= serving (host role) ================= */
-const serving=new Map();
+var serving=new Map();
 async function getServingFile(vid){
-  if(serving.has(vid)){const f=serving.get(vid);return(f&&f.size)?f:null}
+  if(serving.has(vid)){var f=serving.get(vid);return(f&&f.size)?f:null}
   try{
-    const rec=await idb.get('handles',vid);
+    var rec=await idb.get('handles',vid);
     if(!rec||!rec.h)return null;
     if(await rec.h.queryPermission({mode:'read'})!=='granted')return null;
-    const f=await rec.h.getFile();
-    if(f&&f.size){serving.set(vid,f);return f}
+    var f2=await rec.h.getFile();
+    if(f2&&f2.size){serving.set(vid,f2);return f2}
     return null;
   }catch(e){return null}
 }
 function onViewerOpen(conn,m){
-  getServingFile(m.vid).then(f=>{
+  getServingFile(m.vid).then(function(f){
     try{conn.send(JSON.stringify({t:'ready',vid:m.vid,ok:!!f}))}catch(e){}
+    if(f)reqWake();
   });
 }
-let hostBusy=Promise.resolve();
+var hostBusy=Promise.resolve();
 function serveRange(conn,m){
-  hostBusy=hostBusy.then(async()=>{
+  hostBusy=hostBusy.then(async function(){
     try{
-      const f=await getServingFile(m.vid);
+      var f=await getServingFile(m.vid);
       if(!f)throw 0;
-      const end=Math.min(m.end,f.size-1);
-      const buf=await f.slice(m.start,end+1).arrayBuffer();
+      var end=Math.min(m.end,f.size-1);
+      var buf=await f.slice(m.start,end+1).arrayBuffer();
       conn.send(JSON.stringify({t:'data',id:m.id,len:buf.byteLength}));
-      const P=131072;
-      for(let o=0;o<buf.byteLength;o+=P){
+      var P=131072;
+      for(var o=0;o<buf.byteLength;o+=P){
         conn.send(buf.slice(o,Math.min(o+P,buf.byteLength)));
-        await new Promise(r=>setTimeout(r));
+        await sleep(0);
       }
     }catch(e){
       try{conn.send(JSON.stringify({t:'err',id:m.id}))}catch(x){}
@@ -358,14 +463,15 @@ function serveRange(conn,m){
   });
 }
 async function enableServing(){
-  const mine=[...videos.entries()].filter(([,v])=>v.owner===me.uid);
-  let ok=0,need=0;
-  for(const[vid]of mine){
+  var mine=[...videos.entries()].filter(function(e){return e[1].owner===me.uid});
+  var ok=0,need=0;
+  for(var i=0;i<mine.length;i++){
+    var vid=mine[i][0];
     try{
-      const rec=await idb.get('handles',vid);
+      var rec=await idb.get('handles',vid);
       if(!rec||!rec.h){need++;continue}
-      const h=rec.h;
-      let q=await h.queryPermission({mode:'read'});
+      var h=rec.h;
+      var q=await h.queryPermission({mode:'read'});
       if(q!=='granted')q=await h.requestPermission({mode:'read'});
       if(q==='granted'){serving.set(vid,await h.getFile());ok++}else need++;
     }catch(e){need++}
@@ -382,81 +488,98 @@ async function delVideo(vid){
 async function relink(vid){
   if(window.showOpenFilePicker){
     try{
-      const[h]=await showOpenFilePicker();
-      const f=await h.getFile();
-      await idb.put('handles',vid,{h});serving.set(vid,f);
+      var arr=await showOpenFilePicker();
+      var f=await arr[0].getFile();
+      await idb.put('handles',vid,{h:arr[0]});serving.set(vid,f);
       toast('Relinked — serving ready');renderCurrent();
     }catch(e){}
   }else{$('#fpick').dataset.vid=vid;$('#fpick').click()}
 }
 
 /* ================= watch (viewer role) ================= */
-const bcp=('BroadcastChannel'in window)?new BroadcastChannel('gs-stream'):null;
-const inflight=new Map();let activeRx=null,qseq=0,xferTotal=0;
-let watchCtx=null,watchMode=null,blobAbort=false;
+var bcp=('BroadcastChannel'in window)?new BroadcastChannel('gs-stream'):null;
+var inflight=new Map(),activeRx=null,qseq=0,xferTotal=0;
+var watchCtx=null,watchMode=null,blobAbort=false;
 
-function getConn(uid){return new Promise((res,rej)=>{
-  if(uid===me.uid)return res({send(){},open:true});
-  let c=conns.get(uid);
+function getConn(uid){return new Promise(function(res,rej){
+  if(uid===me.uid)return res({send:function(){},open:true});
+  var c=conns.get(uid);
   if(c&&c.open)return res(c);
-  const t=setTimeout(()=>rej(new Error('offline')),8000);
+  var t=setTimeout(function(){rej(new Error('offline'))},8000);
   c=peer.connect(uid,{reliable:true});
   conns.set(uid,c);
   wireConn(c);
-  c.on('open',()=>{clearTimeout(t);res(c)});
-  c.on('close',()=>{if(conns.get(uid)===c)conns.delete(uid)});
-  c.on('error',()=>{clearTimeout(t);rej(new Error('conn'))});
+  c.on('open',function(){
+    clearTimeout(t);
+    addRecent(uid);
+    try{c.send(JSON.stringify({t:'profile',uid:me.uid,name:me.name}))}catch(e){}
+    res(c);
+  });
+  c.on('close',function(){if(conns.get(uid)===c)conns.delete(uid)});
+  c.on('error',function(){clearTimeout(t);rej(new Error('conn'))});
 })}
 function wireConn(conn){
-  conn.on('data',d=>{
+  conn.on('open',function(){
+    try{conn.send(JSON.stringify({t:'profile',uid:me.uid,name:me.name}))}catch(e){}
+    addRecent(conn.peer);
+  });
+  conn.on('data',function(d){
     if(d instanceof ArrayBuffer||ArrayBuffer.isView(d)){onHostBytes(d);return}
-    let m;try{m=JSON.parse(d)}catch(e){return}
+    var m;try{m=JSON.parse(d)}catch(e){return}
     if(m.t==='open')onViewerOpen(conn,m);
     else if(m.t==='range')serveRange(conn,m);
     else if(m.t==='data')onRangeMeta(m);
     else if(m.t==='err')onRangeErr(m);
+    else if(m.t==='profile'){
+      if(m.name&&m.uid){profiles.set(m.uid,m.name);savePeerName(m.uid,m.name);renderCurrent()}
+    }
   });
+  conn.on('close',function(){
+    if(conns.get(conn.peer)===conn)conns.delete(conn.peer);
+    renderCurrent();
+  });
+  conn.on('error',function(){});
 }
-function fetchRange(conn,vid,start,end){return new Promise(res=>{
-  const id='q'+(++qseq);
-  const p={id,res,len:0,parts:[],got:0,t:setTimeout(()=>{if(inflight.has(id)){inflight.delete(id);if(activeRx===p)activeRx=null;res(null)}},20000)};
+function fetchRange(conn,vid,start,end){return new Promise(function(res){
+  var id='q'+(++qseq);
+  var p={id:id,res:res,len:0,parts:[],got:0,t:setTimeout(function(){if(inflight.has(id)){inflight.delete(id);if(activeRx===p)activeRx=null;res(null)}},20000)};
   inflight.set(id,p);
-  try{conn.send(JSON.stringify({t:'range',id,vid,start,end}))}catch(e){clearTimeout(p.t);inflight.delete(id);res(null)}
+  try{conn.send(JSON.stringify({t:'range',id:id,vid:vid,start:start,end:end}))}catch(e){clearTimeout(p.t);inflight.delete(id);res(null)}
 })}
 function onRangeMeta(m){
-  const p=inflight.get(m.id);if(!p)return;
+  var p=inflight.get(m.id);if(!p)return;
   p.len=m.len;p.got=0;p.parts=[];activeRx=p;
 }
 function onRangeErr(m){
-  const p=inflight.get(m.id);
+  var p=inflight.get(m.id);
   if(p){clearTimeout(p.t);inflight.delete(m.id);if(activeRx===p)activeRx=null;p.res(null)}
 }
 function onHostBytes(buf){
   if(!activeRx)return;
-  const b=buf instanceof ArrayBuffer?buf:buf.buffer.slice(buf.byteOffset,buf.byteOffset+buf.byteLength);
+  var b=buf instanceof ArrayBuffer?buf:buf.buffer.slice(buf.byteOffset,buf.byteOffset+buf.byteLength);
   activeRx.parts.push(b);activeRx.got+=b.byteLength;
   xferTotal+=b.byteLength;updateXfer();
   if(activeRx.got>=activeRx.len){
-    const p=activeRx;activeRx=null;
+    var p=activeRx;activeRx=null;
     clearTimeout(p.t);inflight.delete(p.id);
     p.res(concatParts(p.parts,p.len));
   }
 }
-function concatParts(parts,len){const u=new Uint8Array(len);let o=0;for(const p of parts){u.set(new Uint8Array(p),o);o+=p.byteLength}return u.buffer}
-if(bcp)bcp.onmessage=async e=>{
-  const m=e.data;if(!m)return;
+function concatParts(parts,len){var u=new Uint8Array(len),o=0;for(var i=0;i<parts.length;i++){u.set(new Uint8Array(parts[i]),o);o+=parts[i].byteLength}return u.buffer}
+if(bcp)bcp.onmessage=async function(e){
+  var m=e.data;if(!m)return;
   if(m.t==='range'){
-    const w=watchCtx;
+    var w=watchCtx;
     if(!w||m.vid!==w.vid){bcp.postMessage({t:'err',id:m.id});return}
-    let buf=null;
+    var buf=null;
     if(w.uid===me.uid){
-      const f=await getServingFile(m.vid);
-      if(f){const end=Math.min(m.end,f.size-1);buf=await f.slice(m.start,end+1).arrayBuffer()}
+      var f=await getServingFile(m.vid);
+      if(f){var end=Math.min(m.end,f.size-1);buf=await f.slice(m.start,end+1).arrayBuffer()}
     }else{
-      const c=conns.get(w.uid);
+      var c=conns.get(w.uid);
       if(c&&c.open)buf=await fetchRange(c,m.vid,m.start,m.end);
     }
-    if(buf)bcp.postMessage({t:'done',id:m.id,buf});
+    if(buf)bcp.postMessage({t:'done',id:m.id,buf:buf});
     else bcp.postMessage({t:'err',id:m.id});
   }
 };
@@ -466,7 +589,7 @@ async function ensureSW(){
     await navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'});
     await navigator.serviceWorker.ready;
     if(!navigator.serviceWorker.controller){
-      await new Promise(r=>{
+      await new Promise(function(r){
         navigator.serviceWorker.addEventListener('controllerchange',r,{once:true});
         setTimeout(r,3000);
       });
@@ -474,42 +597,55 @@ async function ensureSW(){
     return!!navigator.serviceWorker.controller;
   }catch(e){return false}
 }
-function setStatus(t){const el=$('#wstate');if(el)el.textContent=t||''}
-function updateXfer(){const el=$('#xfer');if(el&&xferTotal>0)el.textContent='Transferred '+fmtB(xferTotal)+' · direct peer connection'}
+function setStatus(t){var el=$('#wstate');if(el)el.textContent=t||''}
+function updateXfer(){var el=$('#xfer');if(el&&xferTotal>0)el.textContent='Transferred '+fmtB(xferTotal)+' · direct peer connection'}
 async function startWatch(uid,vid){
-  let man=videos.get(vid);
+  var man=videos.get(vid);
   if(!man){man=await fetchManifest(uid,vid);renderCurrent()}
-  watchCtx={uid,vid,man};
+  watchCtx={uid:uid,vid:vid,man:man};
   if(man&&$('#wtitle'))$('#wtitle').textContent=man.title||'Untitled';
   if(!man){setStatus('Video not found');return}
-  if(!isLive(uid)){$('#woff').classList.remove('hidden');$('.vwrap').style.opacity=.35;setStatus('');return}
-  setStatus('Connecting to '+displayName(uid)+'…');
-  let conn;
-  try{conn=await getConn(uid)}catch(e){$('#woff').classList.remove('hidden');$('.vwrap').style.opacity=.35;setStatus('');return}
-  try{conn.send(JSON.stringify({t:'open',vid}))}catch(e){}
-  const swok=await ensureSW();
-  const v=$('#vid');if(!v)return;
+  reqWake();
+  if(uid!==me.uid){
+    setStatus('Probing '+displayName(uid)+'\u2026');
+    var online=await probePresence(uid);
+    if(!online&&!isLive(uid)){
+      $('#woff').classList.remove('hidden');
+      var vw=document.querySelector('.vwrap');if(vw)vw.style.opacity=.35;
+      setStatus('');return;
+    }
+  }
+  setStatus('Connecting to '+displayName(uid)+'\u2026');
+  var conn;
+  try{conn=await getConn(uid)}catch(e){
+    $('#woff').classList.remove('hidden');
+    var vw2=document.querySelector('.vwrap');if(vw2)vw2.style.opacity=.35;
+    setStatus('');return;
+  }
+  try{conn.send(JSON.stringify({t:'open',vid:vid}))}catch(e){}
+  var swok=await ensureSW();
+  var v=$('#vid');if(!v)return;
   if(swok){
     watchMode='sw';
-    bcp.postMessage({t:'init',vid,size:man.size,mime:man.mime||'video/mp4'});
+    bcp.postMessage({t:'init',vid:vid,size:man.size,mime:man.mime||'video/mp4'});
     v.src='/__gs/'+vid;
-    v.onerror=()=>{if(watchMode==='sw'&&!blobAbort)blobMode()};
+    v.onerror=function(){if(watchMode==='sw'&&!blobAbort)blobMode()};
     setStatus('Streaming');
   }else blobMode();
-  v.play().catch(()=>{});
+  v.play().catch(function(){});
 }
 async function blobMode(){
   if(watchMode==='blob')return;
   watchMode='blob';
-  const w=watchCtx;if(!w||!w.man)return;
+  var w=watchCtx;if(!w||!w.man)return;
   blobAbort=false;setStatus('Compatibility mode — buffering');
-  const c=w.uid===me.uid?null:conns.get(w.uid);
-  const parts=[];const CH=1536*1024;
-  for(let o=0;o<w.man.size;o+=CH){
+  var c=w.uid===me.uid?null:conns.get(w.uid);
+  var parts=[];var CH=1536*1024;
+  for(var o=0;o<w.man.size;o+=CH){
     if(blobAbort)return;
-    let buf;
+    var buf;
     if(!c){
-      const f=await getServingFile(w.vid);
+      var f=await getServingFile(w.vid);
       if(!f)return failWatch();
       buf=await f.slice(o,Math.min(o+CH,w.man.size)).arrayBuffer();
     }else{
@@ -519,9 +655,9 @@ async function blobMode(){
     parts.push(buf);xferTotal+=buf.byteLength;updateXfer();
     setStatus('Buffering — '+Math.min(100,Math.round(((o+CH)/w.man.size)*100))+'%');
   }
-  const v=$('#vid');if(!v)return;
+  var v=$('#vid');if(!v)return;
   v.src=URL.createObjectURL(new Blob(parts,{type:w.man.mime||'video/mp4'}));
-  v.play().catch(()=>{});
+  v.play().catch(function(){});
   setStatus('Ready');
 }
 function failWatch(){setStatus('Could not stream — the owner may need to open the app and enable serving')}
@@ -530,49 +666,51 @@ function leaveWatch(){
     blobAbort=true;
     if(bcp)bcp.postMessage({t:'close',vid:watchCtx.vid});
     watchCtx=null;watchMode=null;xferTotal=0;
+    relWake();
   }
 }
 function notifyOwner(){
-  const w=watchCtx;if(!w)return;
+  var w=watchCtx;if(!w)return;
   users.get(w.uid).get('requests').get(me.uid+'_'+w.vid).put({from:me.uid,vid:w.vid,at:Date.now()});
   toast('Sent — they will see it next time they open GhostStream');
 }
 
 /* ================= publish ================= */
-let pub={file:null,handle:null};
+var pub={file:null,handle:null};
 async function pickVideo(){
   if(window.showOpenFilePicker){
     try{
-      const[h]=await showOpenFilePicker({types:[{description:'Video',accept:{'video/*':['.mp4','.webm','.mov','.m4v','.mkv']}}]});
-      handlePicked(await h.getFile(),h);
+      var arr=await showOpenFilePicker({types:[{description:'Video',accept:{'video/*':['.mp4','.webm','.mov','.m4v','.mkv']}}]});
+      handlePicked(await arr[0].getFile(),arr[0]);
     }catch(e){if(e&&e.name!=='AbortError')$('#fpick').click()}
   }else $('#fpick').click();
 }
-function handlePicked(file,handle){pub={file,handle};renderCurrent()}
-function grabThumb(file){return new Promise(res=>{
-  const v=document.createElement('video');
+function handlePicked(file,handle){pub={file:file,handle:handle};renderCurrent()}
+function grabThumb(file){return new Promise(function(res){
+  var v=document.createElement('video');
   v.muted=true;v.preload='metadata';
-  const url=URL.createObjectURL(file);v.src=url;
-  const done=o=>{URL.revokeObjectURL(url);res(o)};
-  v.onloadedmetadata=()=>{try{v.currentTime=Math.min(1,(v.duration||2)*.25)}catch(e){done({thumb:'',duration:v.duration||0})}};
-  v.onseeked=()=>{
+  var url=URL.createObjectURL(file);v.src=url;
+  var settled=false;
+  function done(o){if(settled)return;settled=true;URL.revokeObjectURL(url);res(o)}
+  v.onloadedmetadata=function(){try{v.currentTime=Math.min(1,(v.duration||2)*.25)}catch(e){done({thumb:'',duration:v.duration||0})}};
+  v.onseeked=function(){
     try{
-      const w=320,h=Math.max(1,Math.round(w*(v.videoHeight/v.videoWidth)));
-      const c=document.createElement('canvas');c.width=w;c.height=h;
+      var w=320,h=Math.max(1,Math.round(w*(v.videoHeight/v.videoWidth)));
+      var c=document.createElement('canvas');c.width=w;c.height=h;
       c.getContext('2d').drawImage(v,0,0,w,h);
       done({thumb:c.toDataURL('image/jpeg',.62),duration:v.duration||0});
     }catch(e){done({thumb:'',duration:v.duration||0})}
   };
-  v.onerror=()=>done({thumb:'',duration:0});
-  setTimeout(()=>done({thumb:'',duration:0}),8000);
+  v.onerror=function(){done({thumb:'',duration:0})};
+  setTimeout(function(){done({thumb:'',duration:0})},8000);
 })}
 async function doPublish(){
   if(!pub.file)return;
-  const title=($('#ptitle')?$('#ptitle').value.trim():'')||'Untitled';
-  const st=$('#pubstate');if(st)st.textContent='Preparing thumbnail…';
-  const{thumb,duration}=await grabThumb(pub.file);
-  const vid='v'+rid(9);
-  const man={title,size:pub.file.size,mime:pub.file.type||'video/mp4',dur:Math.round(duration||0),thumb,postedAt:Date.now()};
+  var title=($('#ptitle')?$('#ptitle').value.trim():'')||'Untitled';
+  var st=$('#pubstate');if(st)st.textContent='Preparing thumbnail\u2026';
+  var th=await grabThumb(pub.file);
+  var vid='v'+rid(9);
+  var man={title:title,size:pub.file.size,mime:pub.file.type||'video/mp4',dur:Math.round(th.duration||0),thumb:th.thumb,postedAt:Date.now()};
   meNode.get('videos').get(vid).put(man);
   try{await idb.put('manifests',vid,man);if(pub.handle)await idb.put('handles',vid,{h:pub.handle})}catch(e){}
   serving.set(vid,pub.file);
@@ -581,15 +719,72 @@ async function doPublish(){
   location.hash='#/you';
 }
 
+/* ================= directdrop: QR render (qrcode-generator) ================= */
+function drawQR(el,text){
+  try{
+    var qr=qrcode(0,'M');
+    qr.addData(text);
+    qr.make();
+    var count=qr.getModuleCount(),cell=4,margin=8;
+    var canvas=document.createElement('canvas');
+    canvas.width=count*cell+margin*2;
+    canvas.height=count*cell+margin*2;
+    var ctx=canvas.getContext('2d');
+    ctx.fillStyle='#f1f1f1';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#0f0f0f';
+    for(var r=0;r<count;r++)for(var c=0;c<count;c++){
+      if(qr.isDark(r,c))ctx.fillRect(c*cell+margin,r*cell+margin,cell,cell);
+    }
+    el.innerHTML='';el.appendChild(canvas);
+  }catch(e){el.textContent=text}
+}
+
+/* ================= directdrop: camera scanner (html5-qrcode) ================= */
+var html5Qr=null;
+async function startScan(){
+  $('#scanOv').classList.add('show');
+  try{
+    html5Qr=new Html5Qrcode('gsReader');
+    await html5Qr.start({facingMode:'environment'},{fps:10,qrbox:{width:230,height:230}},onScanText,function(){});
+  }catch(e){
+    toast('Camera unavailable — enter the code manually');
+    stopScan();
+  }
+}
+function onScanText(text){
+  var uid=null;
+  var m=/#\/add\/(gs[a-z0-9]{8})/i.exec(text||'');
+  if(m)uid=m[1].toLowerCase();
+  else{
+    var t=(text||'').trim().toLowerCase();
+    if(/^gs[a-z0-9]{8}$/.test(t))uid=t;
+  }
+  if(!uid)return;
+  stopScan().then(function(){pairWith(uid)});
+}
+async function stopScan(){
+  if(html5Qr){try{await html5Qr.stop();html5Qr.clear()}catch(e){}html5Qr=null}
+  $('#scanOv').classList.remove('show');
+}
+
+/* ================= directdrop: web share invite ================= */
+async function shareInvite(){
+  var url=location.origin+'/#/add/'+me.uid;
+  if(navigator.share){
+    try{await navigator.share({title:'GhostStream',text:'Connect with me on GhostStream',url:url});return}
+    catch(e){if(e&&e.name==='AbortError')return}
+  }
+  navigator.clipboard.writeText(url).then(function(){toast('Invite link copied')});
+}
+
 /* ================= views ================= */
-let viewFn=null;
-function renderCurrent(){if(viewFn)viewFn()}
 function empty(icon,title,sub){return '<div class="empty"><svg class="i big"><use href="#'+icon+'"/></svg><b>'+esc(title)+'</b><p>'+esc(sub)+'</p></div>'}
 function cardHTML(vid,v,own){
-  const live=isLive(v.owner);
-  const name=displayName(v.owner);
-  const th=v.thumb?'<img loading="lazy" src="'+v.thumb+'">':'<div class="th-ph"><svg class="i"><use href="#i-film"/></svg></div>';
-  const x=own?'<button class="card-x" data-act="del" data-vid="'+vid+'"><svg class="i"><use href="#i-trash"/></svg></button>':'';
+  var live=isLive(v.owner);
+  var name=displayName(v.owner);
+  var th=v.thumb?'<img loading="lazy" src="'+v.thumb+'">':'<div class="th-ph"><svg class="i"><use href="#i-film"/></svg></div>';
+  var x=own?'<button class="card-x" data-act="del" data-vid="'+vid+'"><svg class="i"><use href="#i-trash"/></svg></button>':'';
   return '<article class="card" data-act="watch" data-uid="'+v.owner+'" data-vid="'+vid+'">'+
     '<div class="thumb">'+th+x+
     '<span class="chip dur">'+fmtT(v.dur)+'</span>'+
@@ -598,30 +793,40 @@ function cardHTML(vid,v,own){
     '<div class="c-meta"><span class="av">'+esc((name[0]||'?').toUpperCase())+'</span><span>'+esc(name)+' · '+ago(v.postedAt)+'</span></div></div></article>';
 }
 function feedHTML(onlyFriends){
-  const items=[...videos.entries()].filter(([,v])=>onlyFriends?v.owner!==me.uid:true).sort((a,b)=>b[1].postedAt-a[1].postedAt);
+  var items=[...videos.entries()].filter(function(e){return onlyFriends?e[1].owner!==me.uid:true});
+  items.sort(function(a,b){return b[1].postedAt-a[1].postedAt});
   if(!items.length)return empty('i-subs','Nothing here yet','Videos from your connections appear here the moment they publish.');
-  return '<div class="grid">'+items.map(([vid,v])=>cardHTML(vid,v,v.owner===me.uid&&onlyFriends===false)).join('')+'</div>';
+  return '<div class="grid">'+items.map(function(e){return cardHTML(e[0],e[1],e[1].owner===me.uid&&!onlyFriends)}).join('')+'</div>';
 }
 function setNav(r){
-  document.querySelectorAll('#nav [data-r]').forEach(b=>b.classList.toggle('on',b.dataset.r===r));
+  document.querySelectorAll('#nav [data-r]').forEach(function(b){b.classList.toggle('on',b.dataset.r===r)});
 }
-function viewHome(){viewFn=viewHome;$('#view').innerHTML='<h2 class="sect">Latest from your network</h2>'+feedHTML(false)}
-function viewSubs(){viewFn=viewSubs;$('#view').innerHTML='<h2 class="sect">Connections</h2>'+feedHTML(true)+
-  '<div class="invite-row"><button class="btn ghost" data-act="add-friend">Add a connection</button></div>'}
+function viewHome(){viewFn=viewHome;$('#view').innerHTML='<h2 class="sect">Latest from your network</h2>'+feedHTML(false);refreshPresence()}
+function viewSubs(){
+  viewFn=viewSubs;
+  $('#view').innerHTML='<h2 class="sect">Connections</h2>'+feedHTML(true)+
+    '<div class="invite-row"><button class="btn ghost" data-act="add-friend">Add a connection</button></div>';
+  refreshPresence();
+}
 function viewActivity(){
   viewFn=viewActivity;
-  const reqs=[...requests.values()].sort((a,b)=>b.at-a.at).map(r=>{
-    const name=displayName(r.from);
-    const vt=(videos.get(r.vid)||{}).title||'a video';
+  var reqs=[...requests.values()].sort(function(a,b){return b.at-a.at}).map(function(r){
+    var name=displayName(r.from);
+    var vt=(videos.get(r.vid)||{}).title||'a video';
     return '<div class="row" data-act="watch" data-uid="'+r.from+'" data-vid="'+r.vid+'">'+
       '<span class="av">'+esc((name[0]||'?').toUpperCase())+'</span>'+
       '<div class="row-b"><b>'+esc(name)+'</b> requested <b>'+esc(vt)+'</b><div class="dim">'+ago(r.at)+'</div></div>'+
       '<svg class="i"><use href="#i-chevr"/></svg></div>';
   }).join('');
-  const cons=[...friends.keys()].map(uid=>{
-    const name=displayName(uid);
-    const live=isLive(uid);
+  var seen={};
+  var cons=[];
+  friends.forEach(function(_,uid){if(!seen[uid]){seen[uid]=1;cons.push(uid)}});
+  getRecents().forEach(function(uid){if(!seen[uid]&&uid!==me.uid){seen[uid]=1;cons.push(uid)}});
+  cons=cons.map(function(uid){
+    var name=displayName(uid);
+    var live=isLive(uid);
     return '<div class="row" data-act="chan" data-uid="'+uid+'">'+
+      '<span class="pdot'+(live?' on':'')+'"></span>'+
       '<span class="av">'+esc((name[0]||'?').toUpperCase())+'</span>'+
       '<div class="row-b"><b>'+esc(name)+'</b><div class="dim">'+(live?'Online':'Offline')+'</div></div>'+
       '<svg class="i"><use href="#i-chevr"/></svg></div>';
@@ -630,11 +835,13 @@ function viewActivity(){
     (reqs||'<p class="fine" style="padding:8px 4px 20px">When someone wants a video you own but you are offline, it lands here.</p>')+
     '<h2 class="sect">Connections</h2>'+
     (cons||'<p class="fine" style="padding:8px 4px">No connections yet — share your invite code.</p>');
+  refreshPresence();
 }
 function viewYou(){
   viewFn=viewYou;
-  const mine=[...videos.entries()].filter(([,v])=>v.owner===me.uid).sort((a,b)=>b[1].postedAt-a[1].postedAt);
-  const ready=mine.filter(([vid])=>serving.has(vid)).length;
+  var mine=[...videos.entries()].filter(function(e){return e[1].owner===me.uid});
+  mine.sort(function(a,b){return b[1].postedAt-a[1].postedAt});
+  var ready=mine.filter(function(e){return serving.has(e[0])}).length;
   $('#view').innerHTML=
     '<section class="panel idcard">'+
       '<span class="av xl">'+esc((me.name[0]||'?').toUpperCase())+'</span>'+
@@ -646,17 +853,18 @@ function viewYou(){
       '<div class="serve-t"><b>Serving</b><span>'+ready+' of '+mine.length+' uploads ready this session</span></div>'+
       '<button class="btn sm" data-act="enable-serve">Enable</button></section>'+
     '<h2 class="sect">Uploads</h2>'+
-    (mine.length?'<div class="grid">'+mine.map(([vid,v])=>cardHTML(vid,v,true)).join('')+'</div>'
+    (mine.length?'<div class="grid">'+mine.map(function(e){return cardHTML(e[0],e[1],true)}).join('')+'</div>'
       :empty('i-film','No uploads yet','Use the + button to publish. Files never leave your device — viewers stream from you directly.'))+
     '<div class="invite-row"><button class="btn ghost" data-act="add-friend">Add connection</button>'+
     '<button class="btn ghost" data-act="copy-invite">Copy invite link</button></div>';
 }
 function viewChannel(uid){
-  viewFn=()=>viewChannel(uid);
-  const name=displayName(uid);
-  const linked=friends.has(uid);
-  const live=isLive(uid);
-  const items=[...videos.entries()].filter(([,v])=>v.owner===uid).sort((a,b)=>b[1].postedAt-a[1].postedAt);
+  viewFn=function(){viewChannel(uid)};
+  var name=displayName(uid);
+  var linked=friends.has(uid);
+  var live=isLive(uid);
+  var items=[...videos.entries()].filter(function(e){return e[1].owner===uid});
+  items.sort(function(a,b){return b[1].postedAt-a[1].postedAt});
   $('#view').innerHTML=
     '<section class="panel idcard">'+
       '<span class="av xl">'+esc((name[0]||'?').toUpperCase())+'</span>'+
@@ -667,8 +875,9 @@ function viewChannel(uid){
       ?'<button class="btn ghost" disabled>Connected</button>'
       :'<button class="btn" data-act="pair-uid" data-uid="'+uid+'">Connect</button>')+'</div>'+
     '<h2 class="sect">Uploads</h2>'+
-    (items.length?'<div class="grid">'+items.map(([vid,v])=>cardHTML(vid,v,false)).join('')+'</div>'
+    (items.length?'<div class="grid">'+items.map(function(e){return cardHTML(e[0],e[1],false)}).join('')+'</div>'
       :empty('i-film','No uploads','This channel has not published anything yet.'));
+  refreshPresence();
 }
 function viewPublish(){
   viewFn=viewPublish;
@@ -689,12 +898,12 @@ function viewPublish(){
   }
 }
 function viewWatch(uid,vid){
-  viewFn=()=>viewWatch(uid,vid);
-  const v=videos.get(vid);
-  const name=displayName(uid);
+  viewFn=function(){viewWatch(uid,vid)};
+  var v=videos.get(vid);
+  var name=displayName(uid);
   $('#view').innerHTML=
     '<div class="watch"><div class="vwrap"><video id="vid" playsinline controls preload="auto"></video></div>'+
-    '<div class="w-pad"><h1 class="w-title" id="wtitle">'+esc((v||{}).title||'…')+'</h1>'+
+    '<div class="w-pad"><h1 class="w-title" id="wtitle">'+esc((v||{}).title||'\u2026')+'</h1>'+
     '<div class="w-row"><div class="chan" data-act="chan" data-uid="'+uid+'">'+
     '<span class="av big">'+esc((name[0]||'?').toUpperCase())+'</span><span class="cn">'+esc(name)+'</span></div>'+
     '<button class="btn ghost sm" data-act="copy-watch">Copy link</button></div>'+
@@ -710,9 +919,8 @@ function viewWatch(uid,vid){
 function viewOnboard(){
   viewFn=viewOnboard;
   $('#view').innerHTML='';
-  $('#view').insertAdjacentHTML('beforebegin','');
   document.body.classList.add('pre');
-  $('.onb')||document.body.insertAdjacentHTML('afterbegin',
+  if(!document.querySelector('.onb'))document.body.insertAdjacentHTML('afterbegin',
     '<div class="onb"><div class="wm"><span class="wm-dot"></span>GHOST<span class="thin">STREAM</span></div>'+
     '<h1>Claim your address</h1>'+
     '<p>One identity. One code. Publish from your device, stream to your people. Nothing is ever stored on a server.</p>'+
@@ -723,44 +931,46 @@ function viewOnboard(){
 
 /* ================= sheet ================= */
 function openSheet(kind){
-  const s=$('#sheet');
+  var s=$('#sheet');
   if(kind==='qr'){
     s.innerHTML='<div class="sh"><h3>Your invite</h3><div class="sh-code">'+esc(me.uid)+'</div>'+
       '<div id="qrBox"></div>'+
       '<div class="sh-btns"><button class="btn ghost" data-act="copy-uid">Copy code</button>'+
-      '<button class="btn" data-act="copy-invite">Copy link</button></div>'+
+      '<button class="btn" data-act="share-invite">Share</button></div>'+
       '<p class="sh-note">Anyone who scans this or enters your code becomes a connection.<br>Your future uploads appear in their feed automatically.</p></div>';
     s.classList.remove('hidden');
-    QRCode.toCanvas(qrBox,location.origin+'/#/add/'+me.uid,{width:200,margin:2,color:{dark:'#f1f1f1',light:'#141414'}},()=>{});
+    drawQR($('#qrBox'),location.origin+'/#/add/'+me.uid);
   }else{
     s.innerHTML='<div class="sh"><h3>Add a connection</h3>'+
-      '<input id="pairInput" class="inp" placeholder="gs••••••••" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+      '<div class="cn-row">'+
+      '<input id="pairInput" class="inp" placeholder="gs\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+      '<button class="scan-btn" data-act="scan" aria-label="Scan QR"><svg class="i"><use href="#i-scan"/></svg></button></div>'+
       '<div class="sh-btns" style="margin-top:14px"><button class="btn ghost" data-act="close-sheet">Cancel</button>'+
       '<button class="btn" data-act="do-pair">Connect</button></div>'+
-      '<p class="sh-note">Enter their code — or scan it. One side is enough; you both get linked.</p></div>';
+      '<p class="sh-note">Enter their code or scan it with the camera.<br>One side is enough — you both get linked.</p></div>';
     s.classList.remove('hidden');
-    const pi=$('#pairInput');
-    pi.focus();
-    pi.addEventListener('keydown',e=>{if(e.key==='Enter')pairWith(pi.value)});
+    var pi=$('#pairInput');
+    setTimeout(function(){pi.focus()},150);
+    pi.addEventListener('keydown',function(e){if(e.key==='Enter')pairWith(pi.value)});
   }
 }
 function closeSheet(){$('#sheet').classList.add('hidden');$('#sheet').innerHTML=''}
 
 /* ================= router ================= */
 function router(){
-  if(!me.uid){pendingRoute=location.hash;viewOnboard();return}
+  if(!me.uid){viewOnboard();return}
   document.body.classList.remove('pre');
-  const onb=document.querySelector('.onb');if(onb)onb.remove();
-  const h=location.hash.replace(/^#\/?/,'');
-  const parts=h.split('/');
+  var onb=document.querySelector('.onb');if(onb)onb.remove();
+  var h=location.hash.replace(/^#\/?/,'');
+  var parts=h.split('/');
   closeSheet();leaveWatch();
-  let fn;
+  var fn;
   if(parts[0]==='add'&&parts[1]){
     pairWith(decodeURIComponent(parts[1]));
     history.replaceState(null,'','#/home');fn=viewHome;
   }
-  else if(parts[0]==='watch'&&parts[1]&&parts[2])fn=()=>viewWatch(parts[1],parts[2]);
-  else if(parts[0]==='channel'&&parts[1])fn=()=>viewChannel(parts[1]);
+  else if(parts[0]==='watch'&&parts[1]&&parts[2])fn=function(){viewWatch(parts[1],parts[2])};
+  else if(parts[0]==='channel'&&parts[1])fn=function(){viewChannel(parts[1])};
   else if(parts[0]==='publish')fn=viewPublish;
   else if(parts[0]==='subs')fn=viewSubs;
   else if(parts[0]==='activity')fn=viewActivity;
@@ -772,23 +982,26 @@ function router(){
 window.addEventListener('hashchange',router);
 
 /* ================= actions ================= */
-document.addEventListener('click',e=>{
-  const r=e.target.closest('#nav [data-r]');
+document.addEventListener('click',function(e){
+  var r=e.target.closest('#nav [data-r]');
   if(r){location.hash='#/'+r.dataset.r;return}
-  const a=e.target.closest('[data-act]');
+  var a=e.target.closest('[data-act]');
   if(!a)return;
-  const act=a.dataset.act;
-  if(act==='watch'){location.hash='#/watch/'+a.dataset.uid+'/'+a.dataset.vid}
-  else if(act==='chan'){location.hash='#/channel/'+a.dataset.uid}
+  var act=a.dataset.act;
+  if(act==='watch')location.hash='#/watch/'+a.dataset.uid+'/'+a.dataset.vid;
+  else if(act==='chan')location.hash='#/channel/'+a.dataset.uid;
   else if(act==='pick')pickVideo();
   else if(act==='publish')doPublish();
   else if(act==='onboard')onboardSubmit();
   else if(act==='show-qr')openSheet('qr');
   else if(act==='add-friend')openSheet('add');
+  else if(act==='scan')startScan();
+  else if(act==='scan-close')stopScan();
   else if(act==='do-pair')pairWith($('#pairInput')?$('#pairInput').value:'');
-  else if(act==='copy-uid')navigator.clipboard.writeText(me.uid).then(()=>toast('Code copied'));
-  else if(act==='copy-invite')navigator.clipboard.writeText(location.origin+'/#/add/'+me.uid).then(()=>toast('Invite link copied'));
-  else if(act==='copy-watch'&&watchCtx)navigator.clipboard.writeText(location.origin+'/#/watch/'+watchCtx.uid+'/'+watchCtx.vid).then(()=>toast('Link copied'));
+  else if(act==='copy-uid')navigator.clipboard.writeText(me.uid).then(function(){toast('Code copied')});
+  else if(act==='copy-invite')navigator.clipboard.writeText(location.origin+'/#/add/'+me.uid).then(function(){toast('Invite link copied')});
+  else if(act==='share-invite')shareInvite();
+  else if(act==='copy-watch'&&watchCtx)navigator.clipboard.writeText(location.origin+'/#/watch/'+watchCtx.uid+'/'+watchCtx.vid).then(function(){toast('Link copied')});
   else if(act==='enable-serve')enableServing();
   else if(act==='del')delVideo(a.dataset.vid);
   else if(act==='relink')relink(a.dataset.vid);
@@ -796,27 +1009,27 @@ document.addEventListener('click',e=>{
   else if(act==='close-sheet')closeSheet();
   else if(act==='pair-uid')pairWith(a.dataset.uid);
   else if(act==='rename'){
-    const n=prompt('Display name',me.name||'');
+    var n=prompt('Display name',me.name||'');
     if(n&&n.trim()){me.name=n.trim();saveMe();meNode.get('name').put(me.name);renderCurrent()}
   }
 });
-document.addEventListener('keydown',e=>{
+document.addEventListener('keydown',function(e){
   if(e.key==='Enter'&&e.target&&e.target.id==='ptitle')doPublish();
   if(e.key==='Enter'&&e.target&&e.target.id==='oname')onboardSubmit();
 });
- $('#fpick').addEventListener('change',e=>{
-  const f=e.target.files[0];e.target.value='';
+ $('#fpick').addEventListener('change',function(e){
+  var f=e.target.files[0];e.target.value='';
   if(!f)return;
   if($('#fpick').dataset.vid){
-    const vid=$('#fpick').dataset.vid;delete $('#fpick').dataset.vid;
+    var vid=$('#fpick').dataset.vid;delete $('#fpick').dataset.vid;
     serving.set(vid,f);toast('Loaded for this session');renderCurrent();
   }else handlePicked(f,null);
 });
 async function onboardSubmit(){
-  const n=($('#oname')?$('#oname').value.trim():'');
+  var n=($('#oname')?$('#oname').value.trim():'');
   if(!n)return toast('Enter a name');
-  const b=document.querySelector('[data-act="onboard"]');
-  if(b){b.disabled=true;b.textContent='Claiming address…'}
+  var b=document.querySelector('[data-act="onboard"]');
+  if(b){b.disabled=true;b.textContent='Claiming address\u2026'}
   await bootPeer();
   me.name=n;saveMe();
   initGun();
@@ -826,12 +1039,13 @@ async function onboardSubmit(){
 /* ================= boot ================= */
 async function seedOwn(){
   try{
-    const keys=await idb.keys('manifests'),vals=await idb.all('manifests');
-    keys.forEach((vid,i)=>{if(!videos.has(vid)&&vals[i])upsertVideo(vid,vals[i],me.uid)});
-    for(const[vid]of videos){
-      if(videos.get(vid).owner!==me.uid)continue;
+    var keys=await idb.keys('manifests'),vals=await idb.all('manifests');
+    keys.forEach(function(vid,i){if(!videos.has(vid)&&vals[i])upsertVideo(vid,vals[i],me.uid)});
+    for(var i=0;i<keys.length;i++){
+      var vid=keys[i];
+      if(videos.get(vid)&&videos.get(vid).owner!==me.uid)continue;
       try{
-        const rec=await idb.get('handles',vid);
+        var rec=await idb.get('handles',vid);
         if(rec&&rec.h&&await rec.h.queryPermission({mode:'read'})==='granted'){
           serving.set(vid,await rec.h.getFile());
         }
@@ -840,7 +1054,6 @@ async function seedOwn(){
   }catch(e){}
 }
 (async function boot(){
-  if(!('BroadcastChannel'in window)||!window.Worker){/* still functional via blob fallback */}
   await idb.open();
   loadMe();
   if(me.uid){
@@ -848,6 +1061,7 @@ async function seedOwn(){
     initGun();
     seedOwn().then(renderCurrent);
     router();
+    setTimeout(refreshPresence,2000);
   }else{
     viewOnboard();
   }

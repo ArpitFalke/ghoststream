@@ -45,11 +45,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:0
 .mini{font-size:10px;letter-spacing:.12em;color:var(--dim);border:1px solid var(--line);padding:3px 7px;border-radius:4px;text-transform:uppercase}
 .inp{width:100%;background:#101010;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:13px 14px;font-size:15px;outline:none}
 .inp:focus{border-color:#4a4a4a}
-.av{width:26px;height:26px;border-radius:50%;background:var(--surface2);border:1px solid #3a3a3a;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--dim);flex:none}
-.av.big{width:40px;height:40px;font-size:16px}
-.av.xl{width:56px;height:56px;font-size:22px}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em}
-/* home identity strip */
 .idstrip{display:flex;align-items:center;gap:12px}
 .idmain{flex:1;min-width:0}
 .idname{font-size:16px;font-weight:700}
@@ -60,6 +56,9 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:0
 .cn-row .inp{flex:1;min-width:0}
 .scan-btn{width:48px;height:48px;background:#101010;border:1px solid var(--line);color:var(--dim);display:flex;align-items:center;justify-content:center;flex:none}
 .scan-btn:active{background:var(--surface2);color:var(--text)}
+.av{width:26px;height:26px;border-radius:50%;background:var(--surface2);border:1px solid #3a3a3a;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--dim);flex:none}
+.av.big{width:40px;height:40px;font-size:16px}
+.av.xl{width:56px;height:56px;font-size:22px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px 14px}
 .card{cursor:pointer}
 .thumb{position:relative;aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
@@ -71,15 +70,22 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:0
 .chip.live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--live);animation:pulse 1.6s infinite}
 .chip.live.off{color:var(--faint);border-color:#3a3a3a}
 .chip.live.off::before{background:var(--faint);animation:none}
+.chip.saved{left:8px;color:#f1f1f1;border:1px solid #4a4a4a;background:rgba(15,15,15,.8)}
+.card.haslive .chip.saved{left:auto;right:64px}
 .c-body{padding:9px 2px 0}
 .c-title{font-size:14.5px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.c-meta{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px;color:var(--dim)}
+.c-meta{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px;color:var(--dim);flex-wrap:wrap}
 .card-x{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:6px;background:rgba(0,0,0,.7);color:#ddd;display:flex;align-items:center;justify-content:center}
 .card-x .i{width:16px;height:16px}
 .empty{text-align:center;padding:50px 20px;color:var(--dim)}
 .empty .i{margin:0 auto 14px;display:block}
 .empty b{display:block;color:var(--text);margin-bottom:5px;font-size:15px}
 .empty p{font-size:13px;max-width:280px;margin:0 auto}
+.syncwait{text-align:center;padding:44px 20px}
+.syncwait .ring{width:34px;height:34px;border:2px solid #2e2e2e;border-top-color:#f1f1f1;border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.syncwait b{display:block;font-size:15px;margin-bottom:5px}
+.syncwait p{font-size:13px;color:var(--dim);max-width:280px;margin:0 auto}
 .watch{margin:-16px -14px 0}
 .vwrap{aspect-ratio:16/9;background:#000;max-height:56vh}
 .vwrap video{width:100%;height:100%;display:block;background:#000}
@@ -177,9 +183,9 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:0
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></symbol>
 </svg>
 <script>
-/* ============ kill legacy service worker ============ */
+'use strict';
+/* ============ v2.3 — connection layer rebuilt. Every conn wired. ============ */
 if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}
-if(window.caches&&caches.keys){caches.keys().then(function(ks){ks.forEach(function(k){caches.delete(k)})}).catch(function(){})}
 
 /* ============ utils ============ */
 var $=function(s){return document.querySelector(s)};
@@ -194,50 +200,83 @@ function playPing(){try{var C=window.AudioContext||window.webkitAudioContext;if(
 var wakeLock=null;
 async function reqWake(){try{wakeLock=await navigator.wakeLock.request('screen')}catch(e){}}
 function relWake(){if(wakeLock){wakeLock.release().catch(function(){});wakeLock=null}}
-function setHdr(state){var t=$('#netTxt'),d=$('#netDot');if(!t)return;d.className='';d.id='netDot';if(state==='on'){t.textContent='ONLINE';t.className='hdr-s on';d.classList.add('on')}else if(state==='er'){t.textContent='NETWORK DOWN';t.className='hdr-s er';d.classList.add('er')}else if(state==='re'){t.textContent='RECONNECTING';t.className='hdr-s';d.classList.add('pu')}else{t.textContent='OFFLINE';t.className='hdr-s'}}
+function setHdr(state){var t=$('#netTxt'),d=$('#netDot');if(!t||!d)return;d.classList.remove('on','er','pu');if(state==='on'){t.textContent='ONLINE';t.className='hdr-s on';d.classList.add('on')}else if(state==='er'){t.textContent='NETWORK DOWN';t.className='hdr-s er';d.classList.add('er')}else if(state==='re'){t.textContent='RECONNECTING';t.className='hdr-s';d.classList.add('pu')}else{t.textContent='OFFLINE';t.className='hdr-s'}}
 
-/* ============ local stores ============ */
+/* ============ idb: handles + video cache + kv feed ============ */
 var idb={db:null,
-open:function(){return new Promise(function(res){var r=indexedDB.open('ghoststream',1);r.onupgradeneeded=function(){var d=r.result;if(!d.objectStoreNames.contains('handles'))d.createObjectStore('handles')};r.onsuccess=function(){idb.db=r.result;res()};r.onerror=function(){res()}})},
-get:function(k){return new Promise(function(res){try{var t=idb.db.transaction('handles','readonly'),q=t.objectStore('handles').get(k);q.onsuccess=function(){res(q.result)};q.onerror=function(){res(null)}}catch(e){res(null)}})},
-put:function(k,v){return new Promise(function(res){try{var t=idb.db.transaction('handles','readwrite'),q=t.objectStore('handles').put(v,k);q.onsuccess=function(){res()};q.onerror=function(){res()}}catch(e){res()}})},
-del:function(k){return new Promise(function(res){try{var t=idb.db.transaction('handles','readwrite');t.objectStore('handles').delete(k);res()}catch(e){res()}})}};
+open:function(){return new Promise(function(res){var r=indexedDB.open('ghoststream',2);
+  r.onupgradeneeded=function(){var d=r.result;
+    if(!d.objectStoreNames.contains('handles'))d.createObjectStore('handles');
+    if(!d.objectStoreNames.contains('vcache'))d.createObjectStore('vcache');
+    if(!d.objectStoreNames.contains('kv'))d.createObjectStore('kv');
+  };
+  r.onsuccess=function(){idb.db=r.result;res()};r.onerror=function(){res()}})},
+op:function(store,mode,fn){return new Promise(function(res){try{var t=idb.db.transaction(store,mode),q=fn(t.objectStore(store));q.onsuccess=function(){res(q.result)};q.onerror=function(){res(null)}}catch(e){res(null)}})},
+hGet:function(k){return idb.op('handles','readonly',function(s){return s.get(k)})},
+hPut:function(k,v){return idb.op('handles','readwrite',function(s){return s.put(v,k)})},
+hDel:function(k){return idb.op('handles','readwrite',function(s){return s.delete(k)})},
+cGet:function(k){return idb.op('vcache','readonly',function(s){return s.get(k)})},
+cPut:function(k,v){return idb.op('vcache','readwrite',function(s){return s.put(v,k)})},
+cDel:function(k){return idb.op('vcache','readwrite',function(s){return s.delete(k)})},
+cKeys:function(){return idb.op('vcache','readonly',function(s){return s.getAllKeys()})},
+cAll:function(){return idb.op('vcache','readonly',function(s){return s.getAll()})},
+kGet:function(k){return idb.op('kv','readonly',function(s){return s.get(k)})},
+kPut:function(k,v){return idb.op('kv','readwrite',function(s){return s.put(v,k)})}};
+
+/* ============ identity + local caches (directdrop pattern) ============ */
 var me={uid:null,name:null};
 function loadMe(){try{var m=JSON.parse(localStorage.getItem('gs-me')||'null');if(m&&m.uid){me.uid=m.uid;me.name=m.name||'Anonymous'}}catch(e){}}
 function saveMe(){localStorage.setItem('gs-me',JSON.stringify(me))}
-function getLocalNames(){try{return JSON.parse(localStorage.getItem('gs-names')||'{}')}catch(e){return{}}}
-function savePeerName(id,name){if(!id||!name)return;var n=getLocalNames();n[id]=name;try{localStorage.setItem('gs-names',JSON.stringify(n))}catch(e){}}
+var profilesMap={};
+try{profilesMap=JSON.parse(localStorage.getItem('gs-names')||'{}')}catch(e){profilesMap={}}
+function savePeerName(id,name){if(!id||!name)return;profilesMap[id]=name;try{localStorage.setItem('gs-names',JSON.stringify(profilesMap))}catch(e){}}
 function getRecents(){try{return JSON.parse(localStorage.getItem('gs-recents')||'[]')}catch(e){return[]}}
-function addRecent(id){if(!id)return;var r=getRecents();r=r.filter(function(x){return x!==id});r.unshift(id);if(r.length>20)r=r.slice(0,20);localStorage.setItem('gs-recents',JSON.stringify(r))}
+function addRecent(id){if(!id)return;var r=getRecents();r=r.filter(function(x){return x!==id});r.unshift(id);if(r.length>20)r=r.slice(0,20);try{localStorage.setItem('gs-recents',JSON.stringify(r))}catch(e){}}
+function knownPeers(){var s={};friends.forEach(function(_,u){s[u]=1});getRecents().forEach(function(u){if(u!==me.uid)s[u]=1});return Object.keys(s)}
+function displayName(uid){if(uid===me.uid)return me.name||'You';return profilesMap[uid]||uid.slice(2,8).toUpperCase()}
 
-/* ============ video store: in-memory + localStorage pipe-synced + gun best-effort ============ */
+/* ============ feed store ============ */
 var videos=new Map();
-function loadFeed(){try{var f=JSON.parse(localStorage.getItem('gs-feed')||'{}');Object.keys(f).forEach(function(vid){if(!videos.has(vid))videos.set(vid,f[vid])})}catch(e){}}
-function persistFeed(){try{var o={};videos.forEach(function(v,vid){o[vid]=v});localStorage.setItem('gs-feed',JSON.stringify(o))}catch(e){}}
+var cachedSet=new Set();
+function loadFeed(){idb.kGet('feed').then(function(f){if(!f)return;Object.keys(f).forEach(function(vid){if(!videos.has(vid))videos.set(vid,f[vid])});renderCurrent()})}
+function persistFeed(){var o={};videos.forEach(function(v,vid){o[vid]=v});idb.kPut('feed',o)}
 function upsertVideo(vid,man,owner){
-  if(!vid||!man)return;
-  man.owner=owner||man.owner;
+  if(!vid||!man||!man.title)return;
+  man.owner=owner||man.owner||me.uid;
   if(!man.postedAt)man.postedAt=Date.now();
   videos.set(vid,man);persistFeed();renderCurrent();
 }
 function removeVideo(vid){videos.delete(vid);persistFeed();renderCurrent()}
-function myManifestList(){var out=[];videos.forEach(function(v,vid){if(v.owner===me.uid)out.push({id:vid,man:v})});return out}
+function myManifestList(){var out=[];videos.forEach(function(v,vid){if(v.owner===me.uid)out.push({id:vid,man:{title:v.title,size:v.size,mime:v.mime,dur:v.dur,thumb:v.thumb,postedAt:v.postedAt}})});return out}
 
-/* ============ friends (pipe-first, gun garnish) ============ */
+/* ============ friends + presence ============ */
 var friends=new Map();
 function addFriend(uid){if(!uid||uid===me.uid||friends.has(uid))return;friends.set(uid,Date.now());addRecent(uid);renderCurrent()}
+var pres={};
+try{pres=JSON.parse(localStorage.getItem('gs-pres')||'{}')}catch(e){pres={}}
+function savePres(){try{localStorage.setItem('gs-pres',JSON.stringify(pres))}catch(e){}}
+function markSeen(uid){pres[uid]=pres[uid]||{};pres[uid].seen=Date.now();try{localStorage.setItem('gs-pres',JSON.stringify(pres))}catch(e){}}
+function lastSeen(uid){var p=pres[uid];return p&&p.seen?ago(p.seen):null}
+function isLive(uid){
+  if(uid===me.uid)return true;
+  var c=conns.get(uid);if(c&&c.open)return true;
+  var p=pres[uid];return!!(p&&p.on&&Date.now()-p.ts<60000);
+}
 var viewFn=null;
-function renderCurrent(){if(viewFn)viewFn()}
+function renderCurrent(){if(watchCtx)return;if(viewFn)viewFn()}
 
-/* ============ peer ============ */
+/* ============ peer + canonical connection manager ============ */
 var peer=null,conns=new Map();
 function tryPeer(id){return new Promise(function(res,rej){
   var p=new Peer(id,{debug:0});var settled=false;
   p.on('open',function(){if(settled)return;settled=true;peer=p;
-    p.on('connection',function(c){if(c.metadata&&c.metadata.ping){c.on('open',function(){try{c.close()}catch(e){}});return}wireConn(c)});
+    p.on('connection',function(c){
+      if(c.metadata&&c.metadata.ping){c.on('open',function(){try{c.close()}catch(e){}});return}
+      c._out=false;wireConn(c);
+    });
     p.on('disconnected',function(){setHdr('re');try{p.reconnect()}catch(e){}});
     p.on('error',function(err){
-      if(err&&err.type==='peer-unavailable'){var m=/peer\s+(\S+)/.exec(err.message||'');if(m&&m[1]){pres[m[1]]={on:false,ts:Date.now()};failConn(m[1]);renderCurrent()}}
+      if(err&&err.type==='peer-unavailable'){var m=/peer\s+(\S+)/.exec(err.message||'');if(m&&m[1]){var uid=m[1];pres[uid]={on:false,ts:0,seen:(pres[uid]||{}).seen};savePres();renderCurrent()}}
     });
     setHdr('on');res(true);
   });
@@ -248,23 +287,98 @@ async function bootPeer(){
   for(var i=0;i<8;i++){var cand='gs'+rid(8);try{if(await tryPeer(cand)){me.uid=cand;saveMe();return}}catch(e){}}
   toast('Network init failed — check connection, reload');
 }
-var pendingConn=new Map();
-function failConn(uid){var p=pendingConn.get(uid);if(p){pendingConn.delete(uid);try{p(new Error('offline'))}catch(e){}}}
-function getConn(uid){return new Promise(function(res,rej){
-  if(uid===me.uid)return res(null);
+/* dedup rule: both sides keep the same physical connection.
+   if myId < peerId: keep MY outgoing. else: keep the INCOMING. */
+function adoptConn(conn){
+  var uid=conn.peer;
+  if(uid===me.uid)return;
+  var ex=conns.get(uid);
+  if(ex&&ex.open&&ex!==conn){
+    var keepEx=(me.uid<uid)?ex._out:!ex._out;
+    var keepNew=(me.uid<uid)?conn._out:!conn._out;
+    if(keepNew===keepEx){if(ex._out&&!conn._out){try{conn.close()}catch(e){}return}try{ex.close()}catch(e){}}
+    else if(keepNew){try{ex.close()}catch(e){}conns.set(uid,conn)}
+    else{try{conn.close()}catch(e){}}
+    return;
+  }
+  conns.set(uid,conn);
+}
+function ensureConn(uid){return new Promise(function(res,rej){
+  if(uid===me.uid)return rej(new Error('self'));
   var c=conns.get(uid);
   if(c&&c.open)return res(c);
-  var t=setTimeout(function(){failConn(uid);rej(new Error('timeout'))},8000);
-  pendingConn.set(uid,function(err){clearTimeout(t);rej(err)});
-  try{c=peer.connect(uid,{reliable:true});conns.set(uid,c);c.on('open',function(){clearTimeout(t);pendingConn.delete(uid);res(c)})}catch(e){clearTimeout(t);rej(e)}
+  if(!peer||peer.destroyed)return rej(new Error('no peer'));
+  var settled=false;
+  var t=setTimeout(function(){if(!settled){settled=true;rej(new Error('timeout'))}},9000);
+  try{
+    c=peer.connect(uid,{reliable:true,metadata:{}});c._out=true;
+    wireConn(c);
+    conns.set(uid,c);
+    c.on('open',function(){
+      if(settled)return;settled=true;clearTimeout(t);
+      addRecent(uid);res(c);
+    });
+    var onFail=function(){if(settled)return;settled=true;clearTimeout(t);if(conns.get(uid)===c)conns.delete(uid);rej(new Error('closed'))};
+    c.on('close',onFail);c.on('error',onFail);
+  }catch(e){if(!settled){settled=true;clearTimeout(t);rej(e)}}
 })}
+function wireConn(conn){
+  conn.on('open',function(){
+    adoptConn(conn);
+    markSeen(conn.peer);
+    try{conn.send(JSON.stringify({t:'hi',uid:me.uid,name:me.name}))}catch(e){}
+    sendSync(conn);
+    renderCurrent();
+  });
+  conn.on('data',function(d){
+    markSeen(conn.peer);
+    if(d instanceof ArrayBuffer||ArrayBuffer.isView(d)){onHostBytes(d);return}
+    var m;try{m=JSON.parse(d)}catch(e){return}
+    handleMsg(conn,m);
+  });
+  conn.on('close',function(){
+    if(conns.get(conn.peer)===conn){conns.delete(conn.peer);pres[conn.peer]={on:false,ts:0,seen:(pres[conn.peer]||{}).seen};savePres();renderCurrent()}
+  });
+  conn.on('error',function(){});
+}
+function handleMsg(conn,m){
+  var other=m.uid||conn.peer;
+  switch(m.t){
+    case 'hi':{
+      var wasNew=!friends.has(other);
+      if(m.name)savePeerName(other,m.name);
+      addFriend(other);
+      if(!conn._hiDone){conn._hiDone=true;sendSync(conn)}
+      if(wasNew&&!watchCtx){toast('Connected with '+displayName(other));location.hash='#/channel/'+other}
+      renderCurrent();
+      break;
+    }
+    case 'syncreq':sendSync(conn);break;
+    case 'sync':mergeSync(m);break;
+    case 'newvid':{
+      if(m.vid&&m.man&&m.man.title){
+        var isNew=!videos.has(m.vid);
+        upsertVideo(m.vid,m.man,m.from||other);
+        if(isNew){playPing();toast(displayName(other)+' uploaded: '+m.man.title)}
+      }
+      break;
+    }
+    case 'delvid':removeVideo(m.vid);break;
+    case 'wantnotify':{
+      try{var reqs=JSON.parse(localStorage.getItem('gs-inreq')||'[]');reqs.push({from:other,vid:m.vid,at:Date.now()});localStorage.setItem('gs-inreq',JSON.stringify(reqs.slice(-30)))}catch(e){}
+      playPing();toast((m.name||displayName(other))+' requested a video');
+      break;
+    }
+    case 'want':hostWant(conn,m);break;
+    case 'pull':hostPull(conn,m);break;
+    case 'size':onWantSize(m);break;
+    case 'nofile':onWantNoFile();break;
+    case 'chunk':onChunkMeta(m);break;
+    case 'chunkerr':onChunkErr(m);break;
+  }
+}
 
-/* ============ directdrop presence probe (single source of truth) ============ */
-var pres={};
-try{pres=JSON.parse(localStorage.getItem('gs-pres')||'{}')}catch(e){pres={}}
-function savePres(){try{localStorage.setItem('gs-pres',JSON.stringify(pres))}catch(e){}}
-function isLive(uid){if(uid===me.uid)return true;var p=pres[uid];return!!(p&&p.on&&Date.now()-p.ts<60000)}
-function lastSeen(uid){var p=pres[uid];return p&&p.ts?ago(p.ts):null}
+/* ============ presence probing (directdrop pattern) ============ */
 function probePresence(pid){return new Promise(function(res){
   if(!peer||peer.destroyed)return res(false);
   var done=false;
@@ -275,15 +389,21 @@ function probePresence(pid){return new Promise(function(res){
     p.on('error',function(){if(!done){done=true;clearTimeout(t);try{p.close()}catch(e){}res(false)}});
   }catch(e){res(false)}
 })}
-function knownPeers(){var s={};friends.forEach(function(_,u){s[u]=1});getRecents().forEach(function(u){if(u!==me.uid)s[u]=1});return Object.keys(s)}
 var probingAll=false;
 async function probeAll(){
   if(probingAll||document.hidden||!peer||peer.destroyed)return;probingAll=true;
   var ids=knownPeers();
-  for(var i=0;i<ids.length;i++){var on=await probePresence(ids[i]);pres[ids[i]]={on:on,ts:on?Date.now():(pres[ids[i]]||{}).ts||0,seen:(pres[ids[i]]||{}).seen};if(on)pres[ids[i]].seen=Date.now()}
+  for(var i=0;i<ids.length;i++){
+    if(conns.get(ids[i])&&conns.get(ids[i]).open){pres[ids[i]]={on:true,ts:Date.now(),seen:Date.now()};continue}
+    var on=await probePresence(ids[i]);
+    pres[ids[i]]={on:on,ts:on?Date.now():0,seen:on?Date.now():(pres[ids[i]]||{}).seen};
+  }
   savePres();probingAll=false;renderCurrent();
 }
 setInterval(probeAll,30000);
+setInterval(function(){
+  conns.forEach(function(c){if(c.open)try{c.send(JSON.stringify({t:'ping'}))}catch(e){}});
+},20000);
 document.addEventListener('visibilitychange',function(){
   if(document.hidden)return;
   if(peer&&peer.disconnected){try{peer.reconnect()}catch(e){}}
@@ -292,7 +412,18 @@ document.addEventListener('visibilitychange',function(){
 window.addEventListener('online',function(){if(peer&&peer.disconnected){try{peer.reconnect()}catch(e){}}setHdr('on')});
 window.addEventListener('offline',function(){setHdr('er')});
 
-/* ============ gun (best-effort discovery only — pipe is primary) ============ */
+/* boot-time auto connect: open pipes to known peers so libraries sync */
+async function autoConnect(){
+  var ids=knownPeers().slice(0,10);
+  for(var i=0;i<ids.length;i++){
+    if(conns.get(ids[i])&&conns.get(ids[i]).open)continue;
+    try{await ensureConn(ids[i])}catch(e){}
+    await sleep(300);
+  }
+  probeAll();
+}
+
+/* ============ gun (garnish only — never critical) ============ */
 var gun,users,meNode;
 function initGun(){
   try{
@@ -300,77 +431,62 @@ function initGun(){
     users=gun.get('ghoststream').get('users');
     meNode=users.get(me.uid);
     meNode.get('name').put(me.name||'Anonymous');
-    meNode.get('videos').map().on(function(v,vid){if(v&&v.title!=null&&!videos.has(vid))upsertVideo(vid,v,me.uid)});
+    meNode.get('videos').map().on(function(v,vid){if(v&&v.title!=null)upsertVideo(vid,v,me.uid)});
     meNode.get('friends').map().on(function(v,uid){if(v&&v.since)addFriend(uid)});
     var rec=getRecents();
-    for(var i=0;i<rec.length;i++){(function(uid){users.get(uid).get('videos').map().on(function(v,vid){if(v&&v.title!=null)upsertVideo(vid,v,uid)});users.get(uid).get('name').on(function(n){if(n){savePeerName(uid,n);renderCurrent()}})})(rec[i])}
+    for(var i=0;i<rec.length;i++){(function(uid){
+      users.get(uid).get('videos').map().on(function(v,vid){if(v&&v.title!=null)upsertVideo(vid,v,uid)});
+      users.get(uid).get('name').on(function(n){if(n){savePeerName(uid,n);renderCurrent()}});
+    })(rec[i])}
   }catch(e){}
 }
 function gunPublish(vid,man){try{meNode.get('videos').get(vid).put(man)}catch(e){}}
 function gunFriend(uid){try{meNode.get('friends').get(uid).put({since:Date.now()});users.get(uid).get('friends').get(me.uid).put({since:Date.now()})}catch(e){}}
 
 /* ============ pairing ============ */
+var syncedPeers=new Set();
+try{(JSON.parse(localStorage.getItem('gs-synced')||'[]')).forEach(function(u){syncedPeers.add(u)})}catch(e){}
+function markSynced(uid){syncedPeers.add(uid);try{localStorage.setItem('gs-synced',JSON.stringify([...syncedPeers].slice(-40)))}catch(e){}}
 async function pairWith(uid,skipNav){
   uid=(uid||'').trim().toLowerCase();
   if(!uid)return toast('Enter a code');
   if(uid===me.uid)return toast('That is your own code');
   if(!/^gs[a-z0-9]{8}$/.test(uid))return toast('Code format: gs + 8 characters');
+  var wasNew=!friends.has(uid);
   addFriend(uid);gunFriend(uid);
-  toast('Connected');
-  try{var c=await getConn(uid)}catch(e){/* offline: link saved, syncs when they appear */}
+  toast('Connected'+(wasNew?'':''));
+  try{await ensureConn(uid)}catch(e){toast('Saved link — syncs when they come online')}
   if(!skipNav)location.hash='#/channel/'+uid;
 }
 
-/* ============ pipe sync: manifests + notifications travel the connection ============ */
-function sendSync(c){try{c.send(JSON.stringify({t:'sync',uid:me.uid,name:me.name,vids:myManifestList()}))}catch(e){}}
+/* ============ library sync over the pipe ============ */
+function sendSync(conn){
+  try{conn.send(JSON.stringify({t:'sync',uid:me.uid,name:me.name,vids:myManifestList()}))}catch(e){}
+}
 function mergeSync(m){
   var n=m.uid||'';
-  if(m.name){profiles_set(n,m.name)}
+  if(m.name)savePeerName(n,m.name);
   var added=0;
-  (m.vids||[]).forEach(function(e){var vid=e.id,man=e.man;if(!vid||!man||!man.title)return;man.owner=n;if(!videos.has(vid)){added++;upsertVideo(vid,man,n)}});
-  if(added){playPing();toast((m.name||n.slice(2,8).toUpperCase())+' shared '+added+' video'+(added>1?'s':''))}
+  (m.vids||[]).forEach(function(e){
+    var vid=e.id,man=e.man;
+    if(!vid||!man||!man.title)return;
+    if(!videos.has(vid))added++;
+    upsertVideo(vid,man,n);
+  });
+  markSynced(n);
+  if(added){playPing();toast(displayName(n)+' — '+added+' video'+(added>1?'s':'')+' synced')}
   renderCurrent();
 }
-var profilesMap=getLocalNames();
-function profiles_set(uid,name){if(!uid||!name)return;profilesMap[uid]=name;savePeerName(uid,name)}
-function displayName(uid){if(uid===me.uid)return me.name||'You';return profilesMap[uid]||uid.slice(2,8).toUpperCase()}
-
-/* ============ wire connection ============ */
-function wireConn(conn){
-  conn.on('open',function(){
-    conns.set(conn.peer,conn);
-    addRecent(conn.peer);
-    pres[conn.peer]={on:true,ts:Date.now(),seen:Date.now()};savePres();
-    try{conn.send(JSON.stringify({t:'hi',uid:me.uid,name:me.name}))}catch(e){}
-    sendSync(conn);
-    renderCurrent();
-  });
-  conn.on('data',function(d){
-    if(d instanceof ArrayBuffer||ArrayBuffer.isView(d)){onHostBytes(d);return}
-    var m;try{m=JSON.parse(d)}catch(e){return}
-    if(m.t==='hi'||m.t==='sync'){
-      if(m.name)profiles_set(m.uid||conn.peer,m.name);
-      if(m.t==='sync')mergeSync(m);
-      if(m.t==='hi'){toast(displayName(m.uid||conn.peer)+' is connected');sendSync(conn)}
-      pres[conn.peer]={on:true,ts:Date.now(),seen:Date.now()};savePres();renderCurrent();
-    }
-    else if(m.t==='newvid'){if(m.vid&&m.man&&m.man.title){var isNew=!videos.has(m.vid);m.man.owner=m.from||conn.peer;upsertVideo(m.vid,m.man,m.from||conn.peer);if(isNew){playPing();toast(displayName(conn.peer)+' uploaded: '+m.man.title)}}}
-    else if(m.t==='want')hostWant(conn,m);
-    else if(m.t==='pull')hostPull(conn,m);
-    else if(m.t==='size')onWantSize(m);
-    else if(m.t==='nofile')onWantNoFile();
-    else if(m.t==='chunk')onChunkMeta(m);
-    else if(m.t==='chunkerr')onChunkErr(m);
-  });
-  conn.on('close',function(){if(conns.get(conn.peer)===conn)conns.delete(conn.peer);pres[conn.peer]={on:false,ts:pres[conn.peer]?pres[conn.peer].ts:0,seen:pres[conn.peer]?pres[conn.peer].seen:0};savePres();renderCurrent()});
-  conn.on('error',function(){});
+async function requestSync(uid){
+  try{var c=await ensureConn(uid);c.send(JSON.stringify({t:'syncreq'}));return true}
+  catch(e){return false}
 }
 
-/* ============ host: serve file ranges ============ */
+/* ============ host: serve file ranges (with backpressure) ============ */
 var serving=new Map();
 async function getServingFile(vid){
   if(serving.has(vid)){var f=serving.get(vid);return(f&&f.size)?f:null}
-  var rec=await idb.get(vid);
+  var rec=await idb.hGet(vid);
   if(rec&&rec.h){
     try{
       if(await rec.h.queryPermission({mode:'read'})==='granted'){var f2=await rec.h.getFile();if(f2&&f2.size){serving.set(vid,f2);return f2}}
@@ -378,174 +494,227 @@ async function getServingFile(vid){
   }
   return null;
 }
-var hostBusy=Promise.resolve();
+function waitDrain(conn){return new Promise(function(r){
+  var dc=conn.dataChannel;
+  if(!dc)return r();
+  (function chk(){
+    if(!conn.open)return r();
+    if(dc.bufferedAmount<4194304)return r();
+    setTimeout(chk,30);
+  })();
+})}
 function hostWant(conn,m){
   getServingFile(m.vid).then(function(f){
-    if(f)try{conn.send(JSON.stringify({t:'size',vid:m.vid,n:f.size}))}catch(e){}
+    if(f){try{conn.send(JSON.stringify({t:'size',vid:m.vid,n:f.size}))}catch(e){}reqWake()}
     else try{conn.send(JSON.stringify({t:'nofile',vid:m.vid}))}catch(e){}
-    if(f)reqWake();
   });
 }
+var hostBusy=Promise.resolve();
 function hostPull(conn,m){
   hostBusy=hostBusy.then(async function(){
     try{
       var f=await getServingFile(m.vid);
       if(!f){try{conn.send(JSON.stringify({t:'chunkerr',id:m.id}))}catch(e){}return}
-      var end=Math.min(m.end,f.size-1);
-      var buf=await f.slice(m.start,end+1).arrayBuffer();
-      var P=131072;
+      var start=+m.start||0,end=Math.min(+m.end||0,f.size-1);
+      if(start<0||start>f.size-1){try{conn.send(JSON.stringify({t:'chunkerr',id:m.id}))}catch(e){}return}
+      var buf=await f.slice(start,end+1).arrayBuffer();
       try{conn.send(JSON.stringify({t:'chunk',id:m.id,len:buf.byteLength}))}catch(e){return}
+      var P=131072;
       for(var o=0;o<buf.byteLength;o+=P){
         if(!conn.open)return;
-        conn.send(buf.slice(o,Math.min(o+P,buf.byteLength)));
-        await sleep(0);
+        await waitDrain(conn);
+        if(!conn.open)return;
+        try{conn.send(buf.slice(o,Math.min(o+P,buf.byteLength)))}catch(e){return}
       }
     }catch(e){try{conn.send(JSON.stringify({t:'chunkerr',id:m.id}))}catch(x){}}
   });
 }
 async function enableServing(){
-  var mine=[];videos.forEach(function(v,vid){if(v.owner===me.uid)mine.push(vid)});
+  var mine=[];videos.forEach(function(v,vid){if(v.owner===me.uid&&!serving.has(vid))mine.push(vid)});
   var ok=0;
   for(var i=0;i<mine.length;i++){
     var vid=mine[i];
-    if(serving.has(vid)){ok++;continue}
     if(window.showOpenFilePicker){
       try{
-        var rec=await idb.get(vid);
-        if(rec&&rec.h){var q=await rec.h.queryPermission({mode:'read'});if(q!=='granted')q=await rec.h.requestPermission({mode:'read'});if(q==='granted'){serving.set(vid,await rec.h.getFile());ok++;continue}}
+        var rec=await idb.hGet(vid);
+        if(rec&&rec.h){
+          var q=await rec.h.queryPermission({mode:'read'});
+          if(q!=='granted')q=await rec.h.requestPermission({mode:'read'});
+          if(q==='granted'){serving.set(vid,await rec.h.getFile());ok++}
+        }
       }catch(e){}
     }
   }
-  if(ok===mine.length&&ok>0){toast('Serving ready — '+ok+' video'+(ok>1?'s':''));renderCurrent();return}
-  toast('Re-select your videos to serve them');
-  $('#fpick').dataset.mode='serve';
-  $('#fpick').multiple=true;
-  $('#fpick').click();
+  var total=0;videos.forEach(function(v,vid){if(v.owner===me.uid)total++});
+  if(ok+serving.size>=total&&total>0){toast('Serving ready — '+total+' video'+(total>1?'s':''));renderCurrent();return}
+  toast('Re-select your videos to serve them this session');
+  $('#fpick').dataset.mode='serve';$('#fpick').multiple=true;$('#fpick').click();
 }
 async function delVideo(vid){
   if(!confirm('Remove this video from your channel?'))return;
   try{meNode.get('videos').get(vid).put(null)}catch(e){}
-  await idb.del(vid);removeVideo(vid);
+  await idb.hDel(vid);await idb.cDel(vid);cachedSet.delete(vid);
+  removeVideo(vid);
   broadcast({t:'delvid',vid:vid});
   toast('Removed');
 }
 function broadcast(msg){conns.forEach(function(c){if(c.open)try{c.send(JSON.stringify(msg))}catch(e){}})}
 
-/* ============ viewer: direct chunk transfer (directdrop style) ============ */
-var activeRx=null,wseq=0,watchCtx=null,watchAbort=false,xferTotal=0,xferStart=0;
+/* ============ viewer: offline cache + chunk transfer ============ */
+var VCAP=10;
+async function cacheGet(vid){return idb.cGet(vid)}
+async function cachePut(vid,blob,man){
+  try{
+    if(blob.size>200*1048576)return;
+    await idb.cPut(vid,{blob:blob,man:{title:man.title,size:man.size,mime:man.mime,dur:man.dur,thumb:man.thumb,postedAt:man.postedAt},at:Date.now()});
+    cachedSet.add(vid);
+    var keys=await idb.cKeys();
+    if(keys.length>VCAP){
+      var all=await idb.cAll();
+      var entries=keys.map(function(k,i){return{k:k,at:all[i]?all[i].at:0}}).sort(function(a,b){return a.at-b.at});
+      while(entries.length>VCAP){var victim=entries.shift();if(victim.k!==vid){await idb.cDel(victim.k);cachedSet.delete(victim.k)}}
+    }
+  }catch(e){}
+}
+var activeRx=null,wseq=0,watchCtx=null,watchGen=0,xferTotal=0,xferStart=0;
 function onWantSize(m){if(activeRx&&activeRx.wantRes){var r=activeRx.wantRes;activeRx.wantRes=null;clearTimeout(activeRx.wantT);r(m.n)}}
 function onWantNoFile(){if(activeRx&&activeRx.wantRes){var r=activeRx.wantRes;activeRx.wantRes=null;clearTimeout(activeRx.wantT);r(-1)}}
-function pullSize(conn,vid){return new Promise(function(res){
-  activeRx={wantRes:res,wantT:setTimeout(function(){activeRx&&(activeRx.wantRes=null);res(-1)},10000)};
-  try{conn.send(JSON.stringify({t:'want',vid:vid}))}catch(e){res(-1)}
-})}
-function pullWindow(conn,vid,start,end){return new Promise(function(res){
-  var id='w'+(++wseq);
-  var p={id:id,len:0,got:0,parts:[],res:res,t:setTimeout(function(){if(activeRx===p){activeRx=null}res(null)},30000)};
-  activeRx=p;
-  try{conn.send(JSON.stringify({t:'pull',id:id,vid:vid,start:start,end:end}))}catch(e){res(null)}
-})}
+function pullSize(conn,vid,attempt){
+  attempt=attempt||0;
+  return new Promise(function(res){
+    var rx={wantRes:null,wantT:null};
+    activeRx=rx;
+    rx.wantRes=res;
+    rx.wantT=setTimeout(function(){
+      if(activeRx===rx&&rx.wantRes){rx.wantRes=null;if(attempt<1){pullSize(conn,vid,attempt+1).then(res)}else res(-1)}
+    },8000);
+    try{conn.send(JSON.stringify({t:'want',vid:vid}))}catch(e){res(-1)}
+  });
+}
+function pullWindow(conn,vid,start,end,attempt){
+  attempt=attempt||0;
+  return new Promise(function(res){
+    var id='w'+(++wseq);
+    var p={id:id,len:0,got:0,parts:[],res:null,t:null};
+    activeRx=p;
+    p.res=res;
+    p.t=setTimeout(function(){
+      if(activeRx===p){activeRx=null;if(attempt<1){pullWindow(conn,vid,start,end,attempt+1).then(res)}else res(null)}
+    },25000);
+    try{conn.send(JSON.stringify({t:'pull',id:id,vid:vid,start:start,end:end}))}catch(e){res(null)}
+  });
+}
 function onChunkMeta(m){if(activeRx&&activeRx.id===m.id){activeRx.len=m.len;activeRx.got=0;activeRx.parts=[]}}
-function onChunkErr(m){if(activeRx&&activeRx.id===m.id){clearTimeout(activeRx.t);var r=activeRx.res;activeRx=null;r(null)}}
+function onChunkErr(m){if(activeRx&&activeRx.id===m.id){clearTimeout(activeRx.t);var r=activeRx.res;activeRx=null;if(r)r(null)}}
 function onHostBytes(buf){
   if(!activeRx||!activeRx.len)return;
   var b=buf instanceof ArrayBuffer?buf:buf.buffer.slice(buf.byteOffset,buf.byteOffset+buf.byteLength);
   activeRx.parts.push(b);activeRx.got+=b.byteLength;xferTotal+=b.byteLength;
   updateXfer();
-  if(activeRx.got>=activeRx.len){clearTimeout(activeRx.t);var p=activeRx;activeRx=null;
-    var u=new Uint8Array(p.len),o=0;for(var i=0;i<p.parts.length;i++){u.set(new Uint8Array(p.parts[i]),o);o+=p.parts[i].byteLength}
-    p.res(u.buffer);
+  if(activeRx.got>=activeRx.len){
+    clearTimeout(activeRx.t);
+    var p=activeRx;activeRx=null;
+    var u=new Uint8Array(p.len),o=0;
+    for(var i=0;i<p.parts.length;i++){u.set(new Uint8Array(p.parts[i]),o);o+=p.parts[i].byteLength}
+    var r=p.res;p.res=null;
+    if(r)r(u.buffer);
   }
 }
 function setStatus(t){var el=$('#wstate');if(el)el.textContent=t||''}
 function updateXfer(){
   var el=$('#xfer');if(!el)return;
   var dt=(Date.now()-xferStart)/1000||1;
-  var speed=xferTotal/dt;
-  el.textContent=fmtB(xferTotal)+' transferred · '+fmtB(speed)+'/s · direct peer link';
-  var bar=$('#pfill');if(bar&&watchCtx&&watchCtx.size)bar.style.width=Math.min(100,(xferTotal/watchCtx.size)*100)+'%';
+  el.textContent=fmtB(xferTotal)+' · '+fmtB(xferTotal/dt)+'/s · direct peer link';
+  var bar=$('#pfill');
+  if(bar&&watchCtx&&watchCtx.size)bar.style.width=Math.min(100,(xferTotal/watchCtx.size)*100)+'%';
 }
 async function startWatch(uid,vid){
+  var gen=++watchGen;
+  activeRx=null;
   var man=videos.get(vid);
   var v=$('#vid');if(!v)return;
-  if(!man){setStatus('Video not found');return}
-  watchCtx={uid:uid,vid:vid,man:man,size:man.size};watchAbort=false;xferTotal=0;
+  if(!man){setStatus('Video metadata missing — open their channel to re-sync');return}
+  watchCtx={uid:uid,vid:vid,man:man,size:man.size};xferTotal=0;
   reqWake();
-  /* SELF: play instantly from the local file — no network, no shims */
+  /* 1. offline cache — instant, works even if owner is offline */
+  var cv=await cacheGet(vid);
+  if(gen!==watchGen)return;
+  if(cv&&cv.blob&&cv.blob.size){
+    v.src=URL.createObjectURL(cv.blob);v.play().catch(function(){});
+    setStatus('Playing saved copy — works offline');relWake();return;
+  }
+  /* 2. self — play straight from the local file */
   if(uid===me.uid){
     var f=await getServingFile(vid);
-    if(f){
-      v.src=URL.createObjectURL(f);v.play().catch(function(){});
-      setStatus('Playing from your device');relWake();return;
-    }
-    var gp=$('#wgrant');
-    if(gp){gp.classList.remove('hidden');setStatus('')}
-    return;
+    if(f){v.src=URL.createObjectURL(f);v.play().catch(function(){});setStatus('Playing from your device');relWake();return}
+    var gp=$('#wgrant');if(gp)gp.classList.remove('hidden');
+    setStatus('');relWake();return;
   }
-  /* REMOTE: probe first (honest 4s), then pull chunks over the pipe */
+  /* 3. remote — probe honestly, then pull over the pipe */
   setStatus('Probing '+displayName(uid)+'\u2026');
-  var online=await probePresence(uid);
-  if(watchAbort)return;
-  pres[uid]={on:online,ts:Date.now(),seen:online?Date.now():(pres[uid]||{}).seen};savePres();renderCurrent();
+  var online=isLive(uid)?true:await probePresence(uid);
+  if(gen!==watchGen)return;
+  pres[uid]={on:online,ts:online?Date.now():0,seen:online?Date.now():(pres[uid]||{}).seen};savePres();renderCurrent();
   if(!online){
-    $('#woff').classList.remove('hidden');
-    document.querySelector('.vwrap').style.opacity=.35;
+    var wb=$('#woff');if(wb)wb.classList.remove('hidden');
+    var vw=document.querySelector('.vwrap');if(vw)vw.style.opacity=.35;
     setStatus('');relWake();return;
   }
   setStatus('Connecting\u2026');
   var conn;
-  try{conn=await getConn(uid)}catch(e){
-    $('#woff').classList.remove('hidden');
-    document.querySelector('.vwrap').style.opacity=.35;
+  try{conn=await ensureConn(uid)}catch(e){
+    if(gen!==watchGen)return;
+    var wb2=$('#woff');if(wb2)wb2.classList.remove('hidden');
+    var vw2=document.querySelector('.vwrap');if(vw2)vw2.style.opacity=.35;
     setStatus('');relWake();return;
   }
-  if(watchAbort)return;
+  if(gen!==watchGen)return;
   setStatus('Requesting video\u2026');
   var size=await pullSize(conn,vid);
-  if(watchAbort)return;
+  if(gen!==watchGen)return;
   if(size<0){
-    setStatus('Not available — '+displayName(uid)+' needs to reopen GhostStream and re-enable serving');
-    $('#woff').classList.remove('hidden');
+    setStatus(displayName(uid)+' is online but the file is locked — they need to tap Enable in You tab');
     relWake();return;
   }
-  watchCtx.size=size;
-  xferStart=Date.now();
+  watchCtx.size=size;xferStart=Date.now();
   var W=2097152,parts=[];
   for(var o=0;o<size;o+=W){
-    if(watchAbort)return;
+    if(gen!==watchGen)return;
     setStatus('Downloading '+Math.min(100,Math.round((o/size)*100))+'%');
     var buf=await pullWindow(conn,vid,o,Math.min(o+W,size)-1);
-    if(watchAbort)return;
-    if(!buf){setStatus('Transfer interrupted');relWake();return}
+    if(gen!==watchGen)return;
+    if(!buf){setStatus('Transfer interrupted — connection dropped');relWake();return}
     parts.push(buf);updateXfer();
   }
   setStatus('Ready');
   var blob=new Blob(parts,{type:man.mime||'video/mp4'});
   v.src=URL.createObjectURL(blob);
   v.play().catch(function(){});
+  cachePut(vid,blob,man).then(renderCurrent);
   relWake();
 }
 function grantSelf(vid){
   (async function(){
-    var rec=await idb.get(vid);
-    if(rec&&rec.h&&window.showOpenFilePicker!==undefined){
+    var rec=await idb.hGet(vid);
+    if(rec&&rec.h){
       try{
         var q=await rec.h.requestPermission({mode:'read'});
-        if(q==='granted'){var f=await rec.h.getFile();serving.set(vid,f);var v=$('#vid');if(v){v.src=URL.createObjectURL(f);v.play()}$('#wgrant').classList.add('hidden');return}
+        if(q==='granted'){
+          var f=await rec.h.getFile();serving.set(vid,f);
+          var v=$('#vid');if(v){v.src=URL.createObjectURL(f);v.play()}
+          var g=$('#wgrant');if(g)g.classList.add('hidden');
+          return;
+        }
       }catch(e){}
     }
     $('#fpick').dataset.mode='relink';$('#fpick').dataset.vid=vid;$('#fpick').multiple=false;$('#fpick').click();
   })();
 }
-function leaveWatch(){watchAbort=true;watchCtx=null;xferTotal=0;relWake()}
-function notifyOwner(){
-  var w=watchCtx;if(!w)return;
-  broadcastTo(w.uid,{t:'wantnotify',from:me.uid,vid:w.vid,name:me.name});
-  try{users.get(w.uid).get('requests').get(me.uid+'_'+w.vid).put({from:me.uid,vid:w.vid,at:Date.now()})}catch(e){}
+function leaveWatch(){watchGen++;watchCtx=null;activeRx=null;xferTotal=0;relWake()}
+function notifyOwner(uid,vid){
+  broadcastTo(uid,{t:'wantnotify',from:me.uid,vid:vid,name:me.name});
+  try{users.get(uid).get('requests').get(me.uid+'_'+vid).put({from:me.uid,vid:vid,at:Date.now()})}catch(e){}
   toast('Request sent');
-  var reqs=JSON.parse(localStorage.getItem('gs-outreq')||'[]');
-  reqs.push({to:w.uid,vid:w.vid,at:Date.now()});
-  localStorage.setItem('gs-outreq',JSON.stringify(reqs.slice(-30)));
 }
 function broadcastTo(uid,msg){var c=conns.get(uid);if(c&&c.open)try{c.send(JSON.stringify(msg))}catch(e){}}
 
@@ -563,7 +732,7 @@ function grabThumb(file){return new Promise(function(res){
   var url=URL.createObjectURL(file);v.src=url;var settled=false;
   function done(o){if(settled)return;settled=true;URL.revokeObjectURL(url);res(o)}
   v.onloadedmetadata=function(){try{v.currentTime=Math.min(1,(v.duration||2)*.25)}catch(e){done({thumb:'',duration:v.duration||0})}};
-  v.onseeked=function(){try{var w=320,h=Math.max(1,Math.round(w*(v.videoHeight/v.videoWidth)));var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(v,0,0,w,h);done({thumb:c.toDataURL('image/jpeg',.62),duration:v.duration||0})}catch(e){done({thumb:'',duration:v.duration||0})}};
+  v.onseeked=function(){try{var w=320,h=Math.max(1,Math.round(w*(v.videoHeight/v.videoWidth)));var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(v,0,0,w,h);done({thumb:c.toDataURL('image/jpeg',.62),duration:v.duration||0})}catch(e){done({thumb:'',duration:0})}};
   v.onerror=function(){done({thumb:'',duration:0})};
   setTimeout(function(){done({thumb:'',duration:0})},8000);
 })}
@@ -576,7 +745,7 @@ async function doPublish(){
   var man={title:title,size:pub.file.size,mime:pub.file.type||'video/mp4',dur:Math.round(th.duration||0),thumb:th.thumb,postedAt:Date.now()};
   upsertVideo(vid,man,me.uid);
   gunPublish(vid,man);
-  if(pub.handle)await idb.put(vid,{h:pub.handle});
+  if(pub.handle)await idb.hPut(vid,{h:pub.handle});
   serving.set(vid,pub.file);
   broadcast({t:'newvid',vid:vid,man:man,from:me.uid});
   pub={file:null,handle:null};
@@ -585,7 +754,7 @@ async function doPublish(){
   location.hash='#/you';
 }
 
-/* ============ qr + scanner (directdrop pattern) ============ */
+/* ============ QR + scanner (directdrop pattern) ============ */
 function drawQR(el,text){
   try{
     var qr=qrcode(0,'M');qr.addData(text);qr.make();
@@ -628,19 +797,21 @@ async function shareInvite(){
 function empty(icon,title,sub){return '<div class="empty"><svg class="i big"><use href="#'+icon+'"/></svg><b>'+esc(title)+'</b><p>'+esc(sub)+'</p></div>'}
 function cardHTML(vid,v,own){
   var live=isLive(v.owner),name=displayName(v.owner);
+  var isSaved=cachedSet.has(vid);
   var th=v.thumb?'<img loading="lazy" src="'+v.thumb+'">':'<div class="th-ph"><svg class="i"><use href="#i-film"/></svg></div>';
   var x=own?'<button class="card-x" data-act="del" data-vid="'+vid+'"><svg class="i"><use href="#i-trash"/></svg></button>':'';
-  return '<article class="card" data-act="watch" data-uid="'+v.owner+'" data-vid="'+vid+'">'+
+  var savedChip=isSaved?'<span class="chip saved">SAVED</span>':'';
+  return '<article class="card'+(live?' haslive':'')+'" data-act="watch" data-uid="'+v.owner+'" data-vid="'+vid+'">'+
     '<div class="thumb">'+th+x+
-    '<span class="chip dur">'+fmtT(v.dur)+'</span>'+
-    '<span class="chip live'+(live?'':' off')+'">'+(live?'LIVE':'OFFLINE')+'</span></div>'+
+    '<span class="chip dur">'+fmtT(v.dur)+'</span>'+savedChip+
+    (live?'<span class="chip live">LIVE</span>':'<span class="chip live off">OFFLINE</span>')+'</div>'+
     '<div class="c-body"><div class="c-title">'+esc(v.title||'Untitled')+'</div>'+
     '<div class="c-meta"><span class="av">'+esc((name[0]||'?').toUpperCase())+'</span><span>'+esc(name)+' · '+ago(v.postedAt)+'</span></div></div></article>';
 }
 function feedHTML(onlyFriends){
   var items=[...videos.entries()].filter(function(e){return onlyFriends?e[1].owner!==me.uid:true});
   items.sort(function(a,b){return b[1].postedAt-a[1].postedAt});
-  if(!items.length)return empty('i-subs','Nothing here yet','Connect with someone, or publish — uploads push to connected peers instantly.');
+  if(!items.length)return empty('i-subs','Nothing here yet','Connect with someone — their whole library syncs over the pipe, past uploads included.');
   return '<div class="grid">'+items.map(function(e){return cardHTML(e[0],e[1],e[1].owner===me.uid&&!onlyFriends)}).join('')+'</div>';
 }
 function setNav(r){document.querySelectorAll('#nav [data-r]').forEach(function(b){b.classList.toggle('on',b.dataset.r===r)})}
@@ -719,16 +890,29 @@ function viewChannel(uid){
   var name=displayName(uid),live=isLive(uid);
   var items=[];videos.forEach(function(v,vid){if(v.owner===uid)items.push([vid,v])});
   items.sort(function(a,b){return b[1].postedAt-a[1].postedAt});
+  var needsSync=!syncedPeers.has(uid)&&items.length===0;
+  var syncingBlock=needsSync?
+    '<div class="panel syncwait" id="syncPanel"><div class="ring"></div><b>Syncing, please wait</b><p>Requesting '+esc(name)+'&#39;s full library over the peer link — everything they&#39;ve published, including before you connected.</p></div>':'';
   $('#view').innerHTML=
     '<section class="panel idstrip">'+
       '<span class="av xl">'+esc((name[0]||'?').toUpperCase())+'</span>'+
       '<div class="idmain"><div class="idname">'+esc(name)+'</div>'+
       '<div class="iduid mono">'+esc(uid)+' · '+(live?'Online':'Offline')+'</div></div>'+
     '</section>'+
+    syncingBlock+
     '<h2 class="sect">Uploads</h2>'+
     (items.length?'<div class="grid">'+items.map(function(e){return cardHTML(e[0],e[1],false)}).join('')+'</div>'
-      :empty('i-film','No uploads','Nothing published yet — their videos appear here the moment they upload while connected.'));
+      :(needsSync?'':empty('i-film','No uploads','Nothing published yet.')));
   probeAll();
+  if(needsSync){
+    requestSync(uid).then(function(ok){
+      if(!ok){var sp=$('#syncPanel');if(sp)sp.innerHTML='<b>Offline</b><p style="margin-top:6px">'+esc(name)+' isn&#39;t reachable right now. Their library syncs automatically next time you&#39;re both on.</p>'}
+      else setTimeout(function(){
+        var sp2=$('#syncPanel');
+        if(sp2&&!syncedPeers.has(uid))sp2.innerHTML='<b>Still syncing\u2026</b><p style="margin-top:6px">They&#39;re online but haven&#39;t responded yet. Keep this open a moment.</p>';
+      },7000);
+    });
+  }
 }
 function viewPublish(){
   viewFn=viewPublish;
@@ -759,13 +943,12 @@ function viewWatch(uid,vid){
     '<div class="pbar"><div id="pfill"></div></div>'+
     '<div class="w-xfer" id="xfer"></div><div id="wstate" class="w-state"></div>'+
     '<div id="wgrant" class="woff hidden"><p>Re-open access to this file on your device to play it.</p><button class="btn sm" data-act="grant" data-vid="'+vid+'">Grant access</button></div>'+
-    '<div id="woff" class="woff hidden"><p>'+esc(name)+' isn&#39;t online right now.</p><button class="btn sm" data-act="notify" data-uid="'+uid+'" data-vid="'+vid+'">Notify and watch later</button></div>'+
+    '<div id="woff" class="woff hidden"><p>'+esc(name)+' isn&#39;t online — and you have no saved copy yet.</p><button class="btn sm" data-act="notify" data-uid="'+uid+'" data-vid="'+vid+'">Notify and watch later</button></div>'+
     '</div></div>';
   startWatch(uid,vid);
 }
 function viewOnboard(){
   viewFn=viewOnboard;
-  document.body.classList.add('pre');
   if(!document.querySelector('.onb'))document.body.insertAdjacentHTML('afterbegin',
     '<div class="onb"><div class="wm"><span class="wm-dot"></span>GHOST<span class="thin">STREAM</span></div>'+
     '<h1>Claim your address</h1><p>One identity. One code. Publish from your device, stream to your people.</p>'+
@@ -774,14 +957,14 @@ function viewOnboard(){
     '<p class="fine">Generated locally. No account, no email, no tracking.</p></div>');
 }
 
-/* ============ sheet (with proper dismissal) ============ */
+/* ============ sheet ============ */
 function openSheet(kind){
   var s=$('#sheet');
   if(kind==='qr'){
     s.innerHTML='<div class="sh"><div class="sh-h"><h3>Your invite</h3><button class="iconb" data-act="close-sheet"><svg class="i"><use href="#i-x"/></svg></button></div>'+
       '<div class="sh-code mono">'+esc(me.uid)+'</div><div id="qrBox"></div>'+
       '<div class="sh-btns"><button class="btn ghost" data-act="copy-uid">Copy code</button><button class="btn" data-act="share-invite">Share</button></div>'+
-      '<p class="sh-note">They scan or type your code — you both get linked. Your uploads appear in their feed automatically.</p></div>';
+      '<p class="sh-note">They scan or type your code — you both get linked and land on each other&#39;s channels.</p></div>';
     s.classList.remove('hidden');
     drawQR($('#qrBox'),location.origin+'/#/add/'+me.uid);
   }
@@ -834,7 +1017,7 @@ document.addEventListener('click',function(e){
   else if(act==='enable-serve')enableServing();
   else if(act==='grant')grantSelf(a.dataset.vid);
   else if(act==='del')delVideo(a.dataset.vid);
-  else if(act==='notify'){watchCtx={uid:a.dataset.uid,vid:a.dataset.vid};notifyOwner()}
+  else if(act==='notify')notifyOwner(a.dataset.uid,a.dataset.vid);
   else if(act==='close-sheet')closeSheet();
   else if(act==='rename'){var n=prompt('Display name',me.name||'');if(n&&n.trim()){me.name=n.trim();saveMe();try{meNode.get('name').put(me.name)}catch(e){}renderCurrent()}}
 });
@@ -853,16 +1036,22 @@ document.addEventListener('keydown',function(e){
   if(mode==='serve'){
     var done=0;
     files.forEach(function(f){
-      var match=null;videos.forEach(function(v,vid){if(v.owner===me.uid&&!serving.has(vid)&&!match&&Math.abs(v.size-f.size)<2)match=vid});
+      var match=null;
+      videos.forEach(function(v,vid){if(v.owner===me.uid&&!serving.has(vid)&&!match&&Math.abs(v.size-f.size)<2)match=vid});
       if(match){serving.set(match,f);done++}
     });
     toast(done?('Serving re-enabled — '+done+' video'+(done>1?'s':'')):'Could not match files');
     renderCurrent();return;
   }
-  if(mode==='relink'&&vids){serving.set(vids,files[0]);grantSelfAfter(vids);return}
+  if(mode==='relink'&&vids){
+    serving.set(vids,files[0]);
+    var v=$('#vid');
+    if(v){v.src=URL.createObjectURL(files[0]);v.play()}
+    var g=$('#wgrant');if(g)g.classList.add('hidden');
+    return;
+  }
   handlePicked(files[0],null);
 });
-function grantSelfAfter(vid){var f=serving.get(vid);var v=$('#vid');if(f&&v){v.src=URL.createObjectURL(f);v.play();var g=$('#wgrant');if(g)g.classList.add('hidden')}}
 async function onboardSubmit(){
   var n=($('#oname')?$('#oname').value.trim():'');
   if(!n)return toast('Enter a name');
@@ -874,90 +1063,29 @@ async function onboardSubmit(){
   router();
 }
 
-/* incoming wantnotify -> activity + toast */
-function onWantNotify(m){
-  try{
-    var reqs=JSON.parse(localStorage.getItem('gs-inreq')||'[]');
-    reqs.push({from:m.from,vid:m.vid,at:Date.now()});
-    localStorage.setItem('gs-inreq',JSON.stringify(reqs.slice(-30)));
-  }catch(e){}
-  playPing();
-  toast((m.name||'Someone')+' requested a video');
-}
-
-/* patch wireConn data handler to include wantnotify */
-var _origWire=wireConn;
-
 /* ============ boot ============ */
 (async function boot(){
   await idb.open();
   loadMe();
   loadFeed();
-  /* rehydrate serving for this session */
+  try{var keys=await idb.cKeys();(keys||[]).forEach(function(k){cachedSet.add(k)})}catch(e){}
   videos.forEach(function(v,vid){
     if(v.owner===me.uid){
-      idb.get(vid).then(function(rec){
-        if(rec&&rec.h&&rec.h.queryPermission)rec.h.queryPermission({mode:'read'}).then(function(q){if(q==='granted')rec.h.getFile().then(function(f){if(f&&f.size)serving.set(vid,f)})}).catch(function(){});
+      idb.hGet(vid).then(function(rec){
+        if(rec&&rec.h&&rec.h.queryPermission)rec.h.queryPermission({mode:'read'}).then(function(q){if(q==='granted')rec.h.getFile().then(function(f){if(f&&f.size)serving.set(vid,f)}).catch(function(){})}).catch(function(){});
       });
     }
   });
+  toast('GhostStream v2.3',1600);
   if(me.uid){
     await bootPeer();
     initGun();
-    /* hook wantnotify into live connections */
-    var origConnect=peer.connect.bind(peer);
     router();
-    setTimeout(probeAll,2500);
-    document.addEventListener('gs-wantnotify',function(){});
-    /* route wantnotify messages: extend handler via wrapper */
-    var oldWire=wireConn;
+    autoConnect();
   }else{
     viewOnboard();
   }
 })();
-/* wantnotify routing — appended message branch */
-document.addEventListener('click',function(){},true);
-(function(){
-  var origHandler=null;
-  window.addEventListener('message',function(){});
-})();
-</script>
-<script>
-/* final patch: extend data handler for wantnotify without rewriting wireConn */
-(function(){
-  var send=DataChannel=null;
-})();
-wireConn=function(conn){
-  conn.on('open',function(){
-    conns.set(conn.peer,conn);
-    addRecent(conn.peer);
-    pres[conn.peer]={on:true,ts:Date.now(),seen:Date.now()};savePres();
-    try{conn.send(JSON.stringify({t:'hi',uid:me.uid,name:me.name}))}catch(e){}
-    sendSync(conn);
-    renderCurrent();
-  });
-  conn.on('data',function(d){
-    if(d instanceof ArrayBuffer||ArrayBuffer.isView(d)){onHostBytes(d);return}
-    var m;try{m=JSON.parse(d)}catch(e){return}
-    if(m.t==='wantnotify'){onWantNotify(m);return}
-    if(m.t==='delvid'){removeVideo(m.vid);return}
-    if(m.t==='hi'||m.t==='sync'){
-      if(m.name)profiles_set(m.uid||conn.peer,m.name);
-      if(m.t==='sync')mergeSync(m);
-      if(m.t==='hi'){toast(displayName(m.uid||conn.peer)+' connected');sendSync(conn)}
-      pres[conn.peer]={on:true,ts:Date.now(),seen:Date.now()};savePres();renderCurrent();
-    }
-    else if(m.t==='newvid'){if(m.vid&&m.man&&m.man.title){var isNew=!videos.has(m.vid);m.man.owner=m.from||conn.peer;upsertVideo(m.vid,m.man,m.from||conn.peer);if(isNew){playPing();toast(displayName(conn.peer)+' uploaded: '+m.man.title)}}}
-    else if(m.t==='want')hostWant(conn,m);
-    else if(m.t==='pull')hostPull(conn,m);
-    else if(m.t==='size')onWantSize(m);
-    else if(m.t==='nofile')onWantNoFile();
-    else if(m.t==='chunk')onChunkMeta(m);
-    else if(m.t==='chunkerr')onChunkErr(m);
-  });
-  conn.on('close',function(){if(conns.get(conn.peer)===conn)conns.delete(conn.peer);pres[conn.peer]={on:false,ts:pres[conn.peer]?pres[conn.peer].ts:0,seen:pres[conn.peer]?pres[conn.peer].seen:0};savePres();renderCurrent()});
-  conn.on('error',function(){});
-};
 </script>
 </body>
 </html>

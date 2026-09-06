@@ -15,22 +15,24 @@
 html,body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:15px;line-height:1.45}
 button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:0}
 .hidden{display:none!important}
-#hdr{position:fixed;top:0;left:0;right:0;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(15,15,15,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:20}
+#hdr{position:fixed;top:0;left:0;right:0;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 16px;background:rgba(15,15,15,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:20}
 .wm{font-weight:800;letter-spacing:.14em;font-size:15px;display:flex;align-items:center;gap:8px}
 .wm-dot{width:8px;height:8px;background:var(--live)}
 .wm .thin{color:var(--dim);font-weight:400}
-.hdr-r{display:flex;align-items:center;gap:12px}
+.hdr-r{display:flex;align-items:center;gap:8px}
 .hdr-s{font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--faint)}
 .hdr-s.on{color:var(--text)}.hdr-s.er{color:var(--live)}
 #netDot{width:7px;height:7px;border-radius:50%;background:#3a3a3a}
 #netDot.on{background:#f1f1f1}#netDot.er{background:var(--live)}#netDot.pu{animation:pulse 1.4s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
-.iconb{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:var(--dim)}
+.iconb{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:var(--dim)}
 .iconb:active{background:var(--surface2);color:var(--text)}
 #nav{position:fixed;bottom:0;left:0;right:0;height:calc(60px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#0f0f0f;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr 72px 1fr 1fr;z-index:20}
 .nv{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--faint);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
 .nv.on{color:var(--text)}.nv span{font-size:9.5px}
 .fab{align-self:center;justify-self:center;width:52px;height:52px;border-radius:50%;background:#f1f1f1;color:#0f0f0f;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 14px rgba(0,0,0,.5)}
+body.onb #nav{display:none}
+body.onb #hdrMenu{visibility:hidden}
 #view{max-width:760px;margin:0 auto;padding:76px 14px calc(84px + env(safe-area-inset-bottom))}
 .sect{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:22px 0 10px;font-weight:600}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
@@ -40,9 +42,12 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:0
 .btn{background:#f1f1f1;color:#0f0f0f;border-radius:8px;padding:13px 18px;font-weight:700;font-size:14px}
 .btn:active{transform:scale(.98)}
 .btn.ghost{background:transparent;border:1px solid #3a3a3a;color:var(--text)}
+.btn.danger{background:transparent;border:1px solid #5c2320;color:var(--live)}
 .btn.sm{padding:8px 12px;font-size:12px;font-weight:600}
 .btn:disabled{opacity:.4}
 .mini{font-size:10px;letter-spacing:.12em;color:var(--dim);border:1px solid var(--line);padding:3px 7px;border-radius:4px;text-transform:uppercase}
+.lnk{background:none;border:none;color:var(--faint);font-size:11px;cursor:pointer;padding:4px 0;font-weight:500}
+.lnk:active{color:var(--dim)}
 .inp{width:100%;background:#101010;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:13px 14px;font-size:15px;outline:none}
 .inp:focus{border-color:#4a4a4a}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em}
@@ -50,7 +55,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:0
 .idmain{flex:1;min-width:0}
 .idname{font-size:16px;font-weight:700}
 .iduid{font-size:12px;color:var(--dim);margin-top:2px;display:flex;align-items:center;gap:8px}
-.idbtns{display:flex;gap:8px}
+.idbtns{display:flex;gap:4px}
 .connect{margin-top:12px}
 .cn-row{display:flex;gap:8px}
 .cn-row .inp{flex:1;min-width:0}
@@ -87,8 +92,9 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:0
 .syncwait b{display:block;font-size:15px;margin-bottom:5px}
 .syncwait p{font-size:13px;color:var(--dim);max-width:280px;margin:0 auto}
 .watch{margin:-16px -14px 0}
-.vwrap{aspect-ratio:16/9;background:#000;max-height:56vh}
+.vwrap{aspect-ratio:16/9;background:#000;max-height:56vh;position:relative}
 .vwrap video{width:100%;height:100%;display:block;background:#000}
+.vback{position:absolute;top:10px;left:10px;z-index:5;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .w-pad{padding:16px 16px 8px}
 .w-title{font-size:17px;font-weight:700;line-height:1.35}
 .w-row{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
@@ -101,17 +107,20 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:0
 .pbar div{height:100%;background:#f1f1f1;width:0%;transition:width .2s}
 .woff{margin-top:16px;border:1px solid var(--line);border-radius:8px;padding:16px;background:var(--surface)}
 .woff p{font-size:14px;margin-bottom:12px}
+.backrow{display:flex;align-items:center;margin:0 0 12px}
+.backbtn{display:flex;align-items:center;gap:4px;color:var(--dim);font-size:13px;font-weight:600;padding:6px 10px 6px 2px}
+.backbtn:active{color:var(--text)}
 .row{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--line);cursor:pointer}
 .row-b{flex:1;min-width:0;font-size:13.5px;color:var(--dim)}
 .row-b b{color:var(--text);font-weight:600}
 .row-b .dim{font-size:11.5px;margin-top:2px}
 .pdot{width:7px;height:7px;border-radius:50%;background:#3a3a3a;flex:none}
 .pdot.on{background:#f1f1f1}
-.onb{display:none;min-height:100vh;padding:80px 28px 40px;max-width:420px;margin:0 auto}
-.onb .wm{font-size:20px;margin-bottom:8px}
-.onb h1{font-size:22px;margin:26px 0 8px}
-.onb p{color:var(--dim);font-size:14px;margin-bottom:28px}
-.onb .fine{margin-top:18px;line-height:1.6}
+.onb-view{padding:24px 4px 40px;max-width:420px;margin:0 auto}
+.onb-view .wm{font-size:20px;margin-bottom:8px}
+.onb-view h1{font-size:22px;margin:26px 0 8px}
+.onb-view p{color:var(--dim);font-size:14px;margin-bottom:28px}
+.onb-view .fine{margin-top:18px;line-height:1.6}
 #sheet{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;display:flex;align-items:flex-end;justify-content:center}
 .sh{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--line);border-radius:14px 14px 0 0;padding:18px 20px calc(24px + env(safe-area-inset-bottom))}
 .sh-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
@@ -138,6 +147,23 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:0
 .scan-box::before{top:-2px;left:-2px;border-width:4px 0 0 4px}
 .scan-box::after{bottom:-2px;right:-2px;border-width:0 4px 4px 0}
 .scan-hint{position:absolute;bottom:12%;left:0;right:0;text-align:center;font-size:12px;color:#8a8a8a;letter-spacing:.08em}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:70;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.op{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(340px,88vw);background:var(--surface);z-index:71;transform:translateX(102%);transition:transform .25s ease;display:flex;flex-direction:column;border-left:1px solid var(--line)}
+.drawer.op{transform:none}
+.dr-h{display:flex;justify-content:space-between;align-items:center;padding:12px 12px 12px 16px;border-bottom:1px solid var(--line);flex:none}
+.dr-t{font-size:11px;font-weight:800;letter-spacing:.2em;color:var(--dim)}
+.dr-b{flex:1;overflow-y:auto;padding:16px}
+.dr-b::-webkit-scrollbar{width:2px}
+.dr-b::-webkit-scrollbar-thumb{background:var(--bd,#333)}
+.ssl{font-size:9.5px;font-weight:700;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;margin:16px 0 8px}
+.ssl:first-child{margin-top:0}
+.dr-idrow{display:flex;align-items:center;gap:8px}
+.dr-code{font-size:16px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dr-qr{background:#f1f1f1;padding:6px;width:110px;line-height:0;flex:none}
+.dr-qr canvas{display:block;width:110px;height:110px;image-rendering:pixelated}
+.dr-note{font-size:10px;color:var(--faint);margin-top:8px;line-height:1.5}
+.dv{height:1px;background:var(--line);margin:16px 0}
 @media(min-width:700px){#sheet{align-items:center}.sh{border-radius:14px}}
 </style>
 </head>
@@ -147,6 +173,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:0
   <div class="hdr-r">
     <span class="hdr-s" id="netTxt">OFFLINE</span>
     <span id="netDot"></span>
+    <button class="iconb" id="hdrMenu" data-act="menu" aria-label="Settings"><svg class="i"><use href="#i-menu"/></svg></button>
   </div>
 </header>
 <main id="view"></main>
@@ -167,24 +194,31 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:0
   </div>
   <div class="scan-area"><div id="gsReader"></div><div class="scan-box"></div><div class="scan-hint">Point at a GhostStream code</div></div>
 </div>
+<div class="scrim" id="scrim" data-act="close-drawer"></div>
+<aside class="drawer" id="drawer">
+  <div class="dr-h"><span class="dr-t">SETTINGS</span><button class="iconb" data-act="close-drawer"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="dr-b" id="drBody"></div>
+</aside>
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
   <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></symbol>
   <symbol id="i-subs" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M10 13.5v4l4-2z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 16H6c1.2-1.4 2-2.5 2-6a4 4 0 1 1 8 0c0 3.5.8 4.6 2 6z"/><path d="M10.5 19a1.5 1.5 0 0 0 3 0"/></symbol>
   <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.2-3.2 3.8-5 7-5s5.8 1.8 7 5"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
   <symbol id="i-qr" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2.5v2.5H14zM20 14v.01M14 20v.01M17.5 17.5v.01M20 20v.01"/></symbol>
   <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></symbol>
   <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></symbol>
   <symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/></symbol>
+  <symbol id="i-chevl" viewBox="0 0 24 24"><path d="M14 6l-6 6 6 6"/></symbol>
   <symbol id="i-chevr" viewBox="0 0 24 24"><path d="M10 6l6 6-6 6"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></symbol>
 </svg>
 <script>
 'use strict';
-/* ============ v2.3 — connection layer rebuilt. Every conn wired. ============ */
+/* v2.4 — navigation overhaul. Fresh devices get a visible onboarding route. */
 if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}
 
 /* ============ utils ============ */
@@ -200,9 +234,13 @@ function playPing(){try{var C=window.AudioContext||window.webkitAudioContext;if(
 var wakeLock=null;
 async function reqWake(){try{wakeLock=await navigator.wakeLock.request('screen')}catch(e){}}
 function relWake(){if(wakeLock){wakeLock.release().catch(function(){});wakeLock=null}}
-function setHdr(state){var t=$('#netTxt'),d=$('#netDot');if(!t||!d)return;d.classList.remove('on','er','pu');if(state==='on'){t.textContent='ONLINE';t.className='hdr-s on';d.classList.add('on')}else if(state==='er'){t.textContent='NETWORK DOWN';t.className='hdr-s er';d.classList.add('er')}else if(state==='re'){t.textContent='RECONNECTING';t.className='hdr-s';d.classList.add('pu')}else{t.textContent='OFFLINE';t.className='hdr-s'}}
+function setHdr(state){var t=$('#netTxt'),d=$('#netDot');if(!t||!d)return;d.classList.remove('on','er','pu');if(state==='on'){t.textContent='ONLINE';t.className='hdr-s on';d.classList.add('on')}else if(state==='er'){t.textContent='NETWORK DOWN';t.className='hdr-s er';d.classList.add('er')}else if(state==='re'){t.textContent='CONNECTING';t.className='hdr-s';d.classList.add('pu')}else{t.textContent='OFFLINE';t.className='hdr-s'}}
+/* directdrop: unread badge in tab title */
+var baseTitle='GHOSTSTREAM',unread=0;
+function bumpUnread(){if(document.hidden){unread++;document.title='('+unread+') '+baseTitle}}
+document.addEventListener('visibilitychange',function(){if(!document.hidden){unread=0;document.title=baseTitle}});
 
-/* ============ idb: handles + video cache + kv feed ============ */
+/* ============ idb ============ */
 var idb={db:null,
 open:function(){return new Promise(function(res){var r=indexedDB.open('ghoststream',2);
   r.onupgradeneeded=function(){var d=r.result;
@@ -223,7 +261,7 @@ cAll:function(){return idb.op('vcache','readonly',function(s){return s.getAll()}
 kGet:function(k){return idb.op('kv','readonly',function(s){return s.get(k)})},
 kPut:function(k,v){return idb.op('kv','readwrite',function(s){return s.put(v,k)})}};
 
-/* ============ identity + local caches (directdrop pattern) ============ */
+/* ============ identity + caches ============ */
 var me={uid:null,name:null};
 function loadMe(){try{var m=JSON.parse(localStorage.getItem('gs-me')||'null');if(m&&m.uid){me.uid=m.uid;me.name=m.name||'Anonymous'}}catch(e){}}
 function saveMe(){localStorage.setItem('gs-me',JSON.stringify(me))}
@@ -236,8 +274,7 @@ function knownPeers(){var s={};friends.forEach(function(_,u){s[u]=1});getRecents
 function displayName(uid){if(uid===me.uid)return me.name||'You';return profilesMap[uid]||uid.slice(2,8).toUpperCase()}
 
 /* ============ feed store ============ */
-var videos=new Map();
-var cachedSet=new Set();
+var videos=new Map(),cachedSet=new Set();
 function loadFeed(){idb.kGet('feed').then(function(f){if(!f)return;Object.keys(f).forEach(function(vid){if(!videos.has(vid))videos.set(vid,f[vid])});renderCurrent()})}
 function persistFeed(){var o={};videos.forEach(function(v,vid){o[vid]=v});idb.kPut('feed',o)}
 function upsertVideo(vid,man,owner){
@@ -257,19 +294,16 @@ try{pres=JSON.parse(localStorage.getItem('gs-pres')||'{}')}catch(e){pres={}}
 function savePres(){try{localStorage.setItem('gs-pres',JSON.stringify(pres))}catch(e){}}
 function markSeen(uid){pres[uid]=pres[uid]||{};pres[uid].seen=Date.now();try{localStorage.setItem('gs-pres',JSON.stringify(pres))}catch(e){}}
 function lastSeen(uid){var p=pres[uid];return p&&p.seen?ago(p.seen):null}
-function isLive(uid){
-  if(uid===me.uid)return true;
-  var c=conns.get(uid);if(c&&c.open)return true;
-  var p=pres[uid];return!!(p&&p.on&&Date.now()-p.ts<60000);
-}
+function isLive(uid){if(uid===me.uid)return true;var c=conns.get(uid);if(c&&c.open)return true;var p=pres[uid];return!!(p&&p.on&&Date.now()-p.ts<60000)}
 var viewFn=null;
 function renderCurrent(){if(watchCtx)return;if(viewFn)viewFn()}
 
-/* ============ peer + canonical connection manager ============ */
-var peer=null,conns=new Map();
+/* ============ peer: claim with late-retry + conflict regen ============ */
+var peer=null,conns=new Map(),peerPending=false,gunReady=false;
 function tryPeer(id){return new Promise(function(res,rej){
   var p=new Peer(id,{debug:0});var settled=false;
-  p.on('open',function(){if(settled)return;settled=true;peer=p;
+  var to=setTimeout(function(){if(!settled){settled=true;try{p.destroy()}catch(e){}rej(new Error('timeout'))}},12000);
+  p.on('open',function(){if(settled)return;settled=true;clearTimeout(to);peer=p;
     p.on('connection',function(c){
       if(c.metadata&&c.metadata.ping){c.on('open',function(){try{c.close()}catch(e){}});return}
       c._out=false;wireConn(c);
@@ -278,17 +312,30 @@ function tryPeer(id){return new Promise(function(res,rej){
     p.on('error',function(err){
       if(err&&err.type==='peer-unavailable'){var m=/peer\s+(\S+)/.exec(err.message||'');if(m&&m[1]){var uid=m[1];pres[uid]={on:false,ts:0,seen:(pres[uid]||{}).seen};savePres();renderCurrent()}}
     });
-    setHdr('on');res(true);
+    res(true);
   });
-  p.on('error',function(err){if(settled)return;settled=true;try{p.destroy()}catch(e){}rej(err)});
+  p.on('error',function(err){if(settled)return;settled=true;clearTimeout(to);try{p.destroy()}catch(e){}rej(err)});
 })}
-async function bootPeer(){
-  if(me.uid){try{if(await tryPeer(me.uid))return}catch(e){}}
-  for(var i=0;i<8;i++){var cand='gs'+rid(8);try{if(await tryPeer(cand)){me.uid=cand;saveMe();return}}catch(e){}}
-  toast('Network init failed — check connection, reload');
+async function ensurePeer(){
+  if(peer&&!peer.destroyed){if(!peer.disconnected)return true;try{peer.reconnect();return true}catch(e){}}
+  if(peerPending)return false;
+  if(!me.uid)return false;
+  peerPending=true;
+  var ok=false;
+  try{ok=await tryPeer(me.uid)}
+  catch(e){
+    peerPending=false;
+    if(e&&e.type==='unavailable-id'){me.uid='gs'+rid(8);saveMe();return ensurePeer()}
+    setHdr('re');
+    setTimeout(function(){ensurePeer()},12000);
+    return false;
+  }
+  peerPending=false;
+  if(ok){setHdr('on');if(!gunReady)initGun();autoConnect();renderCurrent()}
+  return ok;
 }
-/* dedup rule: both sides keep the same physical connection.
-   if myId < peerId: keep MY outgoing. else: keep the INCOMING. */
+
+/* dedup: deterministic surviving connection when both sides dial */
 function adoptConn(conn){
   var uid=conn.peer;
   if(uid===me.uid)return;
@@ -314,10 +361,7 @@ function ensureConn(uid){return new Promise(function(res,rej){
     c=peer.connect(uid,{reliable:true,metadata:{}});c._out=true;
     wireConn(c);
     conns.set(uid,c);
-    c.on('open',function(){
-      if(settled)return;settled=true;clearTimeout(t);
-      addRecent(uid);res(c);
-    });
+    c.on('open',function(){if(settled)return;settled=true;clearTimeout(t);addRecent(uid);res(c)});
     var onFail=function(){if(settled)return;settled=true;clearTimeout(t);if(conns.get(uid)===c)conns.delete(uid);rej(new Error('closed'))};
     c.on('close',onFail);c.on('error',onFail);
   }catch(e){if(!settled){settled=true;clearTimeout(t);rej(e)}}
@@ -349,7 +393,7 @@ function handleMsg(conn,m){
       if(m.name)savePeerName(other,m.name);
       addFriend(other);
       if(!conn._hiDone){conn._hiDone=true;sendSync(conn)}
-      if(wasNew&&!watchCtx){toast('Connected with '+displayName(other));location.hash='#/channel/'+other}
+      if(wasNew){bumpUnread();if(!watchCtx&&!/publish|watch|onboard/.test(location.hash)){toast('Connected with '+displayName(other));location.hash='#/channel/'+other}}
       renderCurrent();
       break;
     }
@@ -359,14 +403,14 @@ function handleMsg(conn,m){
       if(m.vid&&m.man&&m.man.title){
         var isNew=!videos.has(m.vid);
         upsertVideo(m.vid,m.man,m.from||other);
-        if(isNew){playPing();toast(displayName(other)+' uploaded: '+m.man.title)}
+        if(isNew){playPing();bumpUnread();toast(displayName(other)+' uploaded: '+m.man.title)}
       }
       break;
     }
     case 'delvid':removeVideo(m.vid);break;
     case 'wantnotify':{
       try{var reqs=JSON.parse(localStorage.getItem('gs-inreq')||'[]');reqs.push({from:other,vid:m.vid,at:Date.now()});localStorage.setItem('gs-inreq',JSON.stringify(reqs.slice(-30)))}catch(e){}
-      playPing();toast((m.name||displayName(other))+' requested a video');
+      playPing();bumpUnread();toast((m.name||displayName(other))+' requested a video');
       break;
     }
     case 'want':hostWant(conn,m);break;
@@ -378,7 +422,7 @@ function handleMsg(conn,m){
   }
 }
 
-/* ============ presence probing (directdrop pattern) ============ */
+/* ============ presence probing ============ */
 function probePresence(pid){return new Promise(function(res){
   if(!peer||peer.destroyed)return res(false);
   var done=false;
@@ -401,18 +445,14 @@ async function probeAll(){
   savePres();probingAll=false;renderCurrent();
 }
 setInterval(probeAll,30000);
-setInterval(function(){
-  conns.forEach(function(c){if(c.open)try{c.send(JSON.stringify({t:'ping'}))}catch(e){}});
-},20000);
+setInterval(function(){conns.forEach(function(c){if(c.open)try{c.send(JSON.stringify({t:'ping'}))}catch(e){}})},20000);
 document.addEventListener('visibilitychange',function(){
   if(document.hidden)return;
-  if(peer&&peer.disconnected){try{peer.reconnect()}catch(e){}}
-  probeAll();
+  ensurePeer();probeAll();
 });
-window.addEventListener('online',function(){if(peer&&peer.disconnected){try{peer.reconnect()}catch(e){}}setHdr('on')});
+window.addEventListener('online',function(){setHdr('re');ensurePeer()});
 window.addEventListener('offline',function(){setHdr('er')});
 
-/* boot-time auto connect: open pipes to known peers so libraries sync */
 async function autoConnect(){
   var ids=knownPeers().slice(0,10);
   for(var i=0;i<ids.length;i++){
@@ -423,9 +463,10 @@ async function autoConnect(){
   probeAll();
 }
 
-/* ============ gun (garnish only — never critical) ============ */
+/* ============ gun (garnish) ============ */
 var gun,users,meNode;
 function initGun(){
+  if(gunReady||!me.uid)return;gunReady=true;
   try{
     gun=Gun({peers:['https://gun-manhattan.herokuapp.com/gun','https://peer.wallie.io/gun']});
     users=gun.get('ghoststream').get('users');
@@ -443,7 +484,7 @@ function initGun(){
 function gunPublish(vid,man){try{meNode.get('videos').get(vid).put(man)}catch(e){}}
 function gunFriend(uid){try{meNode.get('friends').get(uid).put({since:Date.now()});users.get(uid).get('friends').get(me.uid).put({since:Date.now()})}catch(e){}}
 
-/* ============ pairing ============ */
+/* ============ pairing + sync ============ */
 var syncedPeers=new Set();
 try{(JSON.parse(localStorage.getItem('gs-synced')||'[]')).forEach(function(u){syncedPeers.add(u)})}catch(e){}
 function markSynced(uid){syncedPeers.add(uid);try{localStorage.setItem('gs-synced',JSON.stringify([...syncedPeers].slice(-40)))}catch(e){}}
@@ -452,17 +493,12 @@ async function pairWith(uid,skipNav){
   if(!uid)return toast('Enter a code');
   if(uid===me.uid)return toast('That is your own code');
   if(!/^gs[a-z0-9]{8}$/.test(uid))return toast('Code format: gs + 8 characters');
-  var wasNew=!friends.has(uid);
   addFriend(uid);gunFriend(uid);
-  toast('Connected'+(wasNew?'':''));
+  toast('Connected');
   try{await ensureConn(uid)}catch(e){toast('Saved link — syncs when they come online')}
   if(!skipNav)location.hash='#/channel/'+uid;
 }
-
-/* ============ library sync over the pipe ============ */
-function sendSync(conn){
-  try{conn.send(JSON.stringify({t:'sync',uid:me.uid,name:me.name,vids:myManifestList()}))}catch(e){}
-}
+function sendSync(conn){try{conn.send(JSON.stringify({t:'sync',uid:me.uid,name:me.name,vids:myManifestList()}))}catch(e){}}
 function mergeSync(m){
   var n=m.uid||'';
   if(m.name)savePeerName(n,m.name);
@@ -474,7 +510,7 @@ function mergeSync(m){
     upsertVideo(vid,man,n);
   });
   markSynced(n);
-  if(added){playPing();toast(displayName(n)+' — '+added+' video'+(added>1?'s':'')+' synced')}
+  if(added){playPing();bumpUnread();toast(displayName(n)+' — '+added+' video'+(added>1?'s':'')+' synced')}
   renderCurrent();
 }
 async function requestSync(uid){
@@ -482,7 +518,7 @@ async function requestSync(uid){
   catch(e){return false}
 }
 
-/* ============ host: serve file ranges (with backpressure) ============ */
+/* ============ host ============ */
 var serving=new Map();
 async function getServingFile(vid){
   if(serving.has(vid)){var f=serving.get(vid);return(f&&f.size)?f:null}
@@ -560,7 +596,7 @@ async function delVideo(vid){
 }
 function broadcast(msg){conns.forEach(function(c){if(c.open)try{c.send(JSON.stringify(msg))}catch(e){}})}
 
-/* ============ viewer: offline cache + chunk transfer ============ */
+/* ============ viewer: cache + transfer ============ */
 var VCAP=10;
 async function cacheGet(vid){return idb.cGet(vid)}
 async function cachePut(vid,blob,man){
@@ -583,8 +619,7 @@ function pullSize(conn,vid,attempt){
   attempt=attempt||0;
   return new Promise(function(res){
     var rx={wantRes:null,wantT:null};
-    activeRx=rx;
-    rx.wantRes=res;
+    activeRx=rx;rx.wantRes=res;
     rx.wantT=setTimeout(function(){
       if(activeRx===rx&&rx.wantRes){rx.wantRes=null;if(attempt<1){pullSize(conn,vid,attempt+1).then(res)}else res(-1)}
     },8000);
@@ -596,8 +631,7 @@ function pullWindow(conn,vid,start,end,attempt){
   return new Promise(function(res){
     var id='w'+(++wseq);
     var p={id:id,len:0,got:0,parts:[],res:null,t:null};
-    activeRx=p;
-    p.res=res;
+    activeRx=p;p.res=res;
     p.t=setTimeout(function(){
       if(activeRx===p){activeRx=null;if(attempt<1){pullWindow(conn,vid,start,end,attempt+1).then(res)}else res(null)}
     },25000);
@@ -636,21 +670,18 @@ async function startWatch(uid,vid){
   if(!man){setStatus('Video metadata missing — open their channel to re-sync');return}
   watchCtx={uid:uid,vid:vid,man:man,size:man.size};xferTotal=0;
   reqWake();
-  /* 1. offline cache — instant, works even if owner is offline */
   var cv=await cacheGet(vid);
   if(gen!==watchGen)return;
   if(cv&&cv.blob&&cv.blob.size){
     v.src=URL.createObjectURL(cv.blob);v.play().catch(function(){});
     setStatus('Playing saved copy — works offline');relWake();return;
   }
-  /* 2. self — play straight from the local file */
   if(uid===me.uid){
     var f=await getServingFile(vid);
     if(f){v.src=URL.createObjectURL(f);v.play().catch(function(){});setStatus('Playing from your device');relWake();return}
     var gp=$('#wgrant');if(gp)gp.classList.remove('hidden');
     setStatus('');relWake();return;
   }
-  /* 3. remote — probe honestly, then pull over the pipe */
   setStatus('Probing '+displayName(uid)+'\u2026');
   var online=isLive(uid)?true:await probePresence(uid);
   if(gen!==watchGen)return;
@@ -690,7 +721,7 @@ async function startWatch(uid,vid){
   var blob=new Blob(parts,{type:man.mime||'video/mp4'});
   v.src=URL.createObjectURL(blob);
   v.play().catch(function(){});
-  cachePut(vid,blob,man).then(renderCurrent);
+  cachePut(vid,blob,man);
   relWake();
 }
 function grantSelf(vid){
@@ -754,7 +785,7 @@ async function doPublish(){
   location.hash='#/you';
 }
 
-/* ============ QR + scanner (directdrop pattern) ============ */
+/* ============ qr + scanner ============ */
 function drawQR(el,text){
   try{
     var qr=qrcode(0,'M');qr.addData(text);qr.make();
@@ -793,8 +824,15 @@ async function shareInvite(){
   navigator.clipboard.writeText(url).then(function(){toast('Invite link copied')});
 }
 
+/* ============ back (directdrop pattern) ============ */
+function goBack(){
+  if(history.length>1)history.back();
+  else location.hash='#/home';
+}
+
 /* ============ views ============ */
 function empty(icon,title,sub){return '<div class="empty"><svg class="i big"><use href="#'+icon+'"/></svg><b>'+esc(title)+'</b><p>'+esc(sub)+'</p></div>'}
+function backrowHTML(){return '<div class="backrow"><button class="backbtn" data-act="back"><svg class="i" style="width:18px;height:18px"><use href="#i-chevl"/></svg>Back</button></div>'}
 function cardHTML(vid,v,own){
   var live=isLive(v.owner),name=displayName(v.owner);
   var isSaved=cachedSet.has(vid);
@@ -828,24 +866,26 @@ function idStripHTML(){
     '<button class="scan-btn" data-act="scan" aria-label="Scan"><svg class="i"><use href="#i-scan"/></svg></button>'+
     '<button class="btn" data-act="do-pair" style="flex:none">LINK</button></div>';
 }
+function connectRowHTML(){
+  return '<div class="connect cn-row">'+
+    '<input id="pairInput" class="inp" placeholder="Enter friend code\u2026" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+    '<button class="scan-btn" data-act="scan" aria-label="Scan"><svg class="i"><use href="#i-scan"/></svg></button>'+
+    '<button class="btn" data-act="do-pair" style="flex:none">LINK</button></div>';
+}
+function bindPairInput(){
+  var pi=$('#pairInput');
+  if(pi)pi.addEventListener('keydown',function(e){if(e.key==='Enter')pairWith(pi.value)});
+}
 function viewHome(){
   viewFn=viewHome;
   $('#view').innerHTML='<h2 class="sect">Your code</h2>'+idStripHTML()+
     '<h2 class="sect">Latest from your network</h2>'+feedHTML(false);
-  probeAll();
-  var pi=$('#pairInput');
-  if(pi)pi.addEventListener('keydown',function(e){if(e.key==='Enter')pairWith(pi.value)});
+  probeAll();bindPairInput();
 }
 function viewSubs(){
   viewFn=viewSubs;
-  $('#view').innerHTML='<h2 class="sect">Connections</h2>'+feedHTML(true)+
-    '<div class="connect cn-row">'+
-    '<input id="pairInput" class="inp" placeholder="Enter friend code\u2026" autocomplete="off" autocapitalize="off" spellcheck="false">'+
-    '<button class="scan-btn" data-act="scan" aria-label="Scan"><svg class="i"><use href="#i-scan"/></svg></button>'+
-    '<button class="btn" data-act="do-pair" style="flex:none">LINK</button></div>';
-  probeAll();
-  var pi=$('#pairInput');
-  if(pi)pi.addEventListener('keydown',function(e){if(e.key==='Enter')pairWith(pi.value)});
+  $('#view').innerHTML='<h2 class="sect">Connections</h2>'+feedHTML(true)+connectRowHTML();
+  probeAll();bindPairInput();
 }
 function viewActivity(){
   viewFn=viewActivity;
@@ -860,8 +900,10 @@ function viewActivity(){
     var sub=live?'Online':(lastSeen(uid)?'Last seen '+lastSeen(uid):'Offline');
     return '<div class="row" data-act="chan" data-uid="'+uid+'"><span class="pdot'+(live?' on':'')+'"></span><span class="av">'+esc((name[0]||'?').toUpperCase())+'</span><div class="row-b"><b>'+esc(name)+'</b><div class="dim">'+sub+'</div></div><svg class="i"><use href="#i-chevr"/></svg></div>';
   }).join('');
-  $('#view').innerHTML='<h2 class="sect">Requests</h2>'+(reqHtml||'<p class="fine" style="padding:8px 4px 20px">Watch requests land here.</p>')+
-    '<h2 class="sect">People</h2>'+(cons||'<p class="fine" style="padding:8px 4px">No connections yet.</p>');
+  $('#view').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><h2 class="sect" style="margin-bottom:10px">Requests</h2>'+(reqs.length?'<button class="lnk" data-act="clear-reqs">Clear</button>':'')+'</div>'+
+    (reqHtml||'<p class="fine" style="padding:8px 4px 20px">Watch requests land here.</p>')+
+    '<div style="display:flex;justify-content:space-between;align-items:center"><h2 class="sect" style="margin-bottom:10px">People</h2>'+(cons?'<button class="lnk" data-act="clear-recents">Clear</button>':'')+'</div>'+
+    (cons||'<p class="fine" style="padding:8px 4px">No connections yet.</p>');
   probeAll();
 }
 function viewYou(){
@@ -870,6 +912,7 @@ function viewYou(){
   mine.sort(function(a,b){return b[1].postedAt-a[1].postedAt});
   var ready=mine.filter(function(e){return serving.has(e[0])}).length;
   $('#view').innerHTML=
+    backrowHTML()+
     '<section class="panel idstrip">'+
       '<span class="av xl">'+esc((me.name[0]||'?').toUpperCase())+'</span>'+
       '<div class="idmain"><div class="idname">'+esc(me.name)+' <button class="mini" data-act="rename">Edit</button></div>'+
@@ -882,7 +925,7 @@ function viewYou(){
     '<h2 class="sect">Uploads</h2>'+
     (mine.length?'<div class="grid">'+mine.map(function(e){return cardHTML(e[0],e[1],true)}).join('')+'</div>'
       :empty('i-film','No uploads yet','Use + to publish. Files stay on your device — friends stream from you directly.'))+
-    '<div style="display:flex;gap:10px;margin-top:20px"><button class="btn ghost" style="flex:1" data-act="show-qr">Show QR</button>'+
+    '<div style="display:flex;gap:10px;margin-top:20px"><button class="btn ghost" style="flex:1" data-act="menu">Settings</button>'+
     '<button class="btn ghost" style="flex:1" data-act="copy-invite">Copy invite</button></div>';
 }
 function viewChannel(uid){
@@ -894,6 +937,7 @@ function viewChannel(uid){
   var syncingBlock=needsSync?
     '<div class="panel syncwait" id="syncPanel"><div class="ring"></div><b>Syncing, please wait</b><p>Requesting '+esc(name)+'&#39;s full library over the peer link — everything they&#39;ve published, including before you connected.</p></div>':'';
   $('#view').innerHTML=
+    backrowHTML()+
     '<section class="panel idstrip">'+
       '<span class="av xl">'+esc((name[0]||'?').toUpperCase())+'</span>'+
       '<div class="idmain"><div class="idname">'+esc(name)+'</div>'+
@@ -917,13 +961,15 @@ function viewChannel(uid){
 function viewPublish(){
   viewFn=viewPublish;
   if(!pub.file){
-    $('#view').innerHTML='<section class="panel empty" style="padding:46px 20px">'+
+    $('#view').innerHTML=backrowHTML()+
+      '<section class="panel empty" style="padding:46px 20px">'+
       '<svg class="i big"><use href="#i-film"/></svg><b>Publish a video</b>'+
       '<p>The file stays on your device. Connected friends stream it from you directly.</p>'+
       '<button class="btn" data-act="pick" style="margin-top:18px">Select video</button>'+
       '<p class="fine" style="margin-top:16px">Keep this tab open while friends watch.</p></section>';
   }else{
-    $('#view').innerHTML='<section class="panel">'+
+    $('#view').innerHTML=backrowHTML()+
+      '<section class="panel">'+
       '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:#101010;border:1px solid var(--line);border-radius:8px;font-size:13.5px;word-break:break-all"><svg class="i"><use href="#i-film"/></svg><div><b>'+esc(pub.file.name)+'</b><div class="dim">'+fmtB(pub.file.size)+'</div></div></div>'+
       '<div style="font-size:10px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin:16px 0 8px;font-weight:600">Title</div>'+
       '<input id="ptitle" class="inp" value="'+esc(pub.file.name.replace(/\.[^.]+$/,''))+'">'+
@@ -935,7 +981,9 @@ function viewWatch(uid,vid){
   viewFn=function(){viewWatch(uid,vid)};
   var v=videos.get(vid),name=displayName(uid);
   $('#view').innerHTML=
-    '<div class="watch"><div class="vwrap"><video id="vid" playsinline controls preload="auto"></video></div>'+
+    '<div class="watch"><div class="vwrap">'+
+    '<button class="vback" data-act="watch-back" data-uid="'+uid+'" aria-label="Back"><svg class="i"><use href="#i-chevl"/></svg></button>'+
+    '<video id="vid" playsinline controls preload="auto"></video></div>'+
     '<div class="w-pad"><h1 class="w-title">'+esc((v||{}).title||'Untitled')+'</h1>'+
     '<div class="w-row"><div class="chan" data-act="chan" data-uid="'+uid+'"><span class="av big">'+esc((name[0]||'?').toUpperCase())+'</span><span class="cn">'+esc(name)+'</span></div>'+
     '<button class="btn ghost sm" data-act="copy-watch" data-uid="'+uid+'" data-vid="'+vid+'">Copy link</button></div>'+
@@ -949,12 +997,68 @@ function viewWatch(uid,vid){
 }
 function viewOnboard(){
   viewFn=viewOnboard;
-  if(!document.querySelector('.onb'))document.body.insertAdjacentHTML('afterbegin',
-    '<div class="onb"><div class="wm"><span class="wm-dot"></span>GHOST<span class="thin">STREAM</span></div>'+
-    '<h1>Claim your address</h1><p>One identity. One code. Publish from your device, stream to your people.</p>'+
+  $('#view').innerHTML=
+    '<div class="onb-view">'+
+    '<div class="wm"><span class="wm-dot"></span>GHOST<span class="thin">STREAM</span></div>'+
+    '<h1>Claim your address</h1>'+
+    '<p>One identity. One code. Publish from your device, stream to your people. Nothing is ever stored on a server.</p>'+
     '<input id="oname" class="inp" placeholder="Your name" maxlength="24" autocomplete="off">'+
     '<button class="btn" data-act="onboard" style="width:100%;margin-top:14px">Enter</button>'+
-    '<p class="fine">Generated locally. No account, no email, no tracking.</p></div>');
+    '<p class="fine">Your address is generated locally and works over direct peer connections.<br>No account. No email. No tracking.</p>'+
+    '</div>';
+  var oi=$('#oname');
+  if(oi)setTimeout(function(){oi.focus()},150);
+}
+
+/* ============ settings drawer (directdrop port) ============ */
+function renderDrawer(){
+  var b=$('#drBody');
+  b.innerHTML=
+    '<div class="ssl">Username</div>'+
+    '<div class="dr-idrow"><input id="drUname" class="inp" placeholder="Set username\u2026" maxlength="24" value="'+esc(me.name||'')+'"><button class="btn sm" data-act="dr-save-name">Save</button></div>'+
+    '<div class="dv"></div>'+
+    '<div class="ssl">Your Code</div>'+
+    '<div class="dr-idrow"><span class="dr-code mono">'+esc(me.uid)+'</span><button class="btn sm ghost" data-act="copy-uid">Copy</button></div>'+
+    '<div class="dv"></div>'+
+    '<div class="ssl">QR Invite</div>'+
+    '<div style="display:flex;gap:14px;align-items:flex-start"><div class="dr-qr" id="drQr"></div><div style="flex:1"><p class="dr-note">They scan this or enter your code. You both get linked and land on each other&#39;s channels.</p><button class="btn sm ghost" data-act="share-invite" style="margin-top:10px">Share invite</button></div></div>'+
+    '<div class="dv"></div>'+
+    '<div class="ssl">Session</div>'+
+    '<p class="dr-note">Active links: <b style="color:var(--text)">'+conns.size+'</b></p>'+
+    '<div style="display:flex;gap:8px;margin-top:8px"><button class="btn sm ghost" data-act="clear-recents" style="flex:1">Clear recents</button><button class="btn sm ghost" data-act="close-drawer" style="flex:1">Done</button></div>'+
+    '<div class="dv"></div>'+
+    '<div class="ssl">Danger Zone</div>'+
+    '<button class="btn danger" data-act="reset-id" style="width:100%">Reset callsign</button>'+
+    '<p class="dr-note">Generates a new identity. Friends must re-add your new code.</p>'+
+    '<button class="btn danger" data-act="wipe-all" style="width:100%;margin-top:10px">Wipe all local data</button>'+
+    '<p class="dr-note">Deletes everything on this device: identity, links, uploads registry, saved videos. Cannot be undone.</p>';
+  drawQR($('#drQr'),location.origin+'/#/add/'+me.uid);
+  var du=$('#drUname');
+  if(du)du.addEventListener('keydown',function(e){if(e.key==='Enter')doSaveName()});
+}
+function openDrawer(){renderDrawer();$('#drawer').classList.add('op');$('#scrim').classList.add('op')}
+function closeDrawer(){$('#drawer').classList.remove('op');$('#scrim').classList.remove('op')}
+function doSaveName(){
+  var du=$('#drUname');if(!du)return;
+  var n=du.value.trim();
+  if(!n)return toast('Enter a name');
+  me.name=n;saveMe();
+  try{meNode.get('name').put(me.name)}catch(e){}
+  toast('Username saved');
+  broadcast({t:'profile',uid:me.uid,name:me.name});
+  closeDrawer();renderCurrent();
+}
+function resetIdentity(){
+  if(!confirm('Reset your callsign? Your current identity and all links will be erased. Friends must add your new code.'))return;
+  ['gs-me','gs-names','gs-recents','gs-pres','gs-synced','gs-inreq','gs-outreq','gs-feed'].forEach(function(k){localStorage.removeItem(k)});
+  location.reload();
+}
+function wipeAll(){
+  if(!confirm('Wipe ALL local data? Identity, connections, saved videos — everything. This cannot be undone.'))return;
+  ['gs-me','gs-names','gs-recents','gs-pres','gs-synced','gs-inreq','gs-outreq','gs-feed'].forEach(function(k){localStorage.removeItem(k)});
+  if(idb.db){try{indexedDB.deleteDatabase('ghoststream')}catch(e){}}
+  if(window.caches&&caches.keys){caches.keys().then(function(ks){ks.forEach(function(k){caches.delete(k)})}).catch(function(){})}
+  location.reload();
 }
 
 /* ============ sheet ============ */
@@ -971,15 +1075,15 @@ function openSheet(kind){
 }
 function closeSheet(){$('#sheet').classList.add('hidden');$('#sheet').innerHTML=''}
  $('#sheet').addEventListener('click',function(e){if(e.target===this)closeSheet()});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeSheet();stopScan()}});
+ $('#scrim').addEventListener('click',function(){closeDrawer()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeSheet();stopScan();closeDrawer()}});
 
 /* ============ router ============ */
 function router(){
-  if(!me.uid){viewOnboard();return}
-  document.body.classList.remove('pre');
-  var onb=document.querySelector('.onb');if(onb)onb.remove();
   var parts=location.hash.replace(/^#\/?/,'').split('/');
-  closeSheet();leaveWatch();
+  if(!me.uid){document.body.classList.add('onb');closeSheet();closeDrawer();leaveWatch();setNav('');viewOnboard();return}
+  document.body.classList.remove('onb');
+  closeSheet();closeDrawer();leaveWatch();
   var fn;
   if(parts[0]==='add'&&parts[1]){pairWith(decodeURIComponent(parts[1]));history.replaceState(null,'','#/home');fn=viewHome}
   else if(parts[0]==='watch'&&parts[1]&&parts[2])fn=function(){viewWatch(parts[1],parts[2])};
@@ -1003,9 +1107,18 @@ document.addEventListener('click',function(e){
   var act=a.dataset.act;
   if(act==='watch')location.hash='#/watch/'+a.dataset.uid+'/'+a.dataset.vid;
   else if(act==='chan')location.hash='#/channel/'+a.dataset.uid;
+  else if(act==='back')goBack();
+  else if(act==='watch-back'){if(history.length>1)history.back();else location.hash='#/channel/'+a.dataset.uid}
   else if(act==='pick')pickVideo();
   else if(act==='publish')doPublish();
   else if(act==='onboard')onboardSubmit();
+  else if(act==='menu')openDrawer();
+  else if(act==='close-drawer')closeDrawer();
+  else if(act==='dr-save-name')doSaveName();
+  else if(act==='reset-id')resetIdentity();
+  else if(act==='wipe-all')wipeAll();
+  else if(act==='clear-recents'){localStorage.removeItem('gs-recents');toast('Recents cleared');renderCurrent();if($('#drawer').classList.contains('op'))renderDrawer()}
+  else if(act==='clear-reqs'){localStorage.removeItem('gs-inreq');renderCurrent()}
   else if(act==='show-qr')openSheet('qr');
   else if(act==='scan')startScan();
   else if(act==='scan-close')stopScan();
@@ -1052,15 +1165,18 @@ document.addEventListener('keydown',function(e){
   }
   handlePicked(files[0],null);
 });
-async function onboardSubmit(){
-  var n=($('#oname')?$('#oname').value.trim():'');
+function onboardSubmit(){
+  var oi=$('#oname');
+  var n=(oi?oi.value.trim():'');
   if(!n)return toast('Enter a name');
   var b=document.querySelector('[data-act="onboard"]');
-  if(b){b.disabled=true;b.textContent='Claiming address\u2026'}
-  await bootPeer();
+  if(b){b.disabled=true;b.textContent='Creating identity\u2026'}
+  if(!me.uid)me.uid='gs'+rid(8);
   me.name=n;saveMe();
   initGun();
+  toast('Welcome, '+n);
   router();
+  ensurePeer();
 }
 
 /* ============ boot ============ */
@@ -1076,14 +1192,10 @@ async function onboardSubmit(){
       });
     }
   });
-  toast('GhostStream v2.3',1600);
+  router();
   if(me.uid){
-    await bootPeer();
-    initGun();
-    router();
-    autoConnect();
-  }else{
-    viewOnboard();
+    if(!gunReady)initGun();
+    ensurePeer();
   }
 })();
 </script>
